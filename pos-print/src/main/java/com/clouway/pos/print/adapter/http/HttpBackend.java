@@ -53,4 +53,9 @@ public class HttpBackend {
     }
   }
 
+
+  public void stop() throws Exception {
+    server.stop();
+  }
+
 }
