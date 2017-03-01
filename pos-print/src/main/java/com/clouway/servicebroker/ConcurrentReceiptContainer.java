@@ -1,6 +1,9 @@
 package com.clouway.servicebroker;
 
+import com.evo.servicebroker.client.PrintResponse;
 import com.evo.servicebroker.client.Receipt;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.MapMaker;
 import com.google.inject.Singleton;
 
@@ -15,10 +18,11 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class ConcurrentReceiptContainer implements ReceiptContainer {
 
-  private ConcurrentMap<String, Receipt> receipts = new MapMaker()
-          .concurrencyLevel(32)
-          .expiration(2, TimeUnit.HOURS)
-          .makeMap();
+  private final Cache<String, Receipt> receipts = CacheBuilder.newBuilder()
+            .maximumSize(1000)
+            .concurrencyLevel(32)
+            .expireAfterWrite(5, TimeUnit.MINUTES)
+            .build();
 
   /**
    * Adds receipt to container.
@@ -36,7 +40,9 @@ public class ConcurrentReceiptContainer implements ReceiptContainer {
    * @return removed receipt.
    */
   public Receipt removeReceipt(Receipt receipt) {
-    return receipts.remove(receipt.generateUniqueId());
+    Receipt existing = receipts.getIfPresent(receipt.generateUniqueId());
+    receipts.invalidate(receipt.generateUniqueId());
+    return existing;
   }
 
   /**
@@ -46,7 +52,7 @@ public class ConcurrentReceiptContainer implements ReceiptContainer {
    * @return receipt.
    */
   public Receipt getReceiptByKey(String receiptKey) {
-    return receipts.get(receiptKey);
+    return receipts.getIfPresent(receiptKey);
   }
 
   /**
@@ -56,7 +62,7 @@ public class ConcurrentReceiptContainer implements ReceiptContainer {
    * @return true is found or false otherwise.
    */
   public boolean containsKey(String receiptKey){
-    return receipts.containsKey(receiptKey);
+    return receipts.getIfPresent(receiptKey) != null;
   }
 
   /**
@@ -66,7 +72,7 @@ public class ConcurrentReceiptContainer implements ReceiptContainer {
    * @return true or false.
    */
   public boolean containsReceipt(Receipt receipt) {
-    return receipts.containsKey(receipt.generateUniqueId());
+    return receipts.getIfPresent(receipt.generateUniqueId()) != null;
   }
 
   /**
@@ -76,7 +82,7 @@ public class ConcurrentReceiptContainer implements ReceiptContainer {
    * @return receipt from container.
    */
   public Receipt getReceipt(Receipt receipt) {
-    return receipts.get(receipt.generateUniqueId());
+    return receipts.getIfPresent(receipt.generateUniqueId());
   }
 
   /**
@@ -85,6 +91,6 @@ public class ConcurrentReceiptContainer implements ReceiptContainer {
    * @return size of the container.
    */
   public int getSize() {
-    return receipts.size();
+    return (int)receipts.size();
   }
 }

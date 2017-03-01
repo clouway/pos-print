@@ -1,0 +1,81 @@
+buildscript {
+  ext.kotlin_version = '1.0.5-3'
+  repositories {
+    mavenCentral()
+  }
+
+  dependencies {
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+  }
+}
+
+apply plugin: 'java'
+apply plugin: "kotlin"
+
+allprojects {
+  apply plugin: 'java'
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
+}
+
+repositories {
+  mavenCentral()
+  mavenLocal()
+  maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+}
+
+dependencies {
+  compile project(':pos-print-client')
+
+  compile 'com.google.inject:guice:3.0'
+  compile 'com.google.inject.extensions:guice-multibindings:3.0'
+  compile 'com.google.inject.extensions:guice-servlet:3.0'
+  compile 'com.google.guava:guava:19.0'
+
+  // Internal version of Sitebricks
+  compile('org.mvel:mvel2:2.1.3.Final')
+  compile('org.jsoup:jsoup:1.8.1')
+  compile('javax.validation:validation-api:1.0.0.GA')
+  compile('com.clouway:sitebricks:0.8.12-SNAPSHOT')
+
+  compile('com.google.sitebricks:sitebricks-client:0.8.11') {
+    exclude module: 'guice'
+    exclude module: 'guice-servlet'
+    exclude module: 'jackson-databind'
+    exclude module: 'sitebricks-converter'
+    exclude module: 'async-http-client'
+    exclude module: 'jcip-annotations'
+    exclude module: 'xstream'
+  }
+
+  compile('com.google.sitebricks:sitebricks-converter:0.8.11') {
+    exclude module: 'guice'
+    exclude module: 'guice-servlet'
+    exclude module: 'guice-multibindings'
+    exclude module: 'jackson-databind'
+  }
+  compile 'com.google.sitebricks:sitebricks-annotations:0.8.11'
+  compile('dom4j:dom4j:1.6.1') {
+    exclude module: 'xml-apis'
+  }
+
+  compile 'org.mortbay.jetty:jetty:6.1.26'
+  compile 'org.mortbay.jetty:jetty-client:6.1.26'
+  compile 'org.slf4j:slf4j-api:1.6.3'
+  compile 'ch.qos.logback:logback-classic:0.9.30'
+
+
+  testCompile 'junit:junit:4.11', 'org.jmock:jmock:2.6.0', 'org.jmock:jmock-junit4:2.8.2'
+}
+
+
+test {
+  // set heap size for the test JVM(s)
+  minHeapSize = '2g'
+  maxHeapSize = '4g'
+
+  jvmArgs "-XX:MaxPermSize=1g"
+}
+
+
+
