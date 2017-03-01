@@ -2,6 +2,7 @@ package com.clouway.pos.print.service;
 
 import com.clouway.pos.print.client.JsonSerializer;
 import com.clouway.pos.print.client.JsonSerializerFactory;
+import com.google.inject.TypeLiteral;
 import com.google.sitebricks.client.Transport;
 
 import java.io.IOException;
@@ -17,6 +18,11 @@ public final class GsonTransport implements Transport {
 
   public <T> T in(InputStream inputStream, Class<T> tClass) throws IOException {
     return (T) serializer.deserializeEntity(inputStream, tClass);
+  }
+
+  @Override
+  public <T> T in(InputStream in, TypeLiteral<T> type) throws IOException {
+    return null;
   }
 
   public <T> void out(OutputStream outputStream, Class<T> tClass, T t) {
