@@ -15,5 +15,15 @@ public class PosPrintService {
     backend.start();
     
     System.out.printf("POS Print Service is up and running on port: %d", httpPort);
+
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      System.out.printf("POS Print Service is going to shutdown.");
+      try {
+        backend.stop();
+      } catch (Exception e) {
+        System.out.println("Failed to stop server due: " + e.getMessage());
+      }
+      System.out.printf("POS Print Service goes down.");
+    }));
   }
 }
