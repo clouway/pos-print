@@ -1,7 +1,16 @@
-### POS Print Service 
+## POS Print Service 
 
 A Service for printing of receipts to cash registers or termo printers.
- 
+
+### Build
+
+In pos-print
+```sh
+gradle clean shadowJar
+```
+will create build/libs/pos-print-all.jar which could be distributed 
+and runned on any machine.
+
 ### Receipt Sample 
 
 The current design requires the following JSON messages to be used for printing 
