@@ -30,8 +30,6 @@ public class FP705Printer implements ReceiptPrinter {
 
   private static final byte READ_DATE_TIME = (byte) 0x3E;
 
-  private static final byte PAPER_CUT_CMD = (byte) 0x2E;
-  private static final byte PAPER_FEED_CMD = (byte) 0x2C;
   private static final byte READ_STATUS_CMD = (byte) 0x4A;
   private static final byte SEQ_START = (byte) 0x20;
 
@@ -62,7 +60,6 @@ public class FP705Printer implements ReceiptPrinter {
   private static final byte TEXT_RECEIPT_PRINT_TEXT = (byte) 0x2A;
 
   private static final byte SYN = 0x16;
-  private static final byte NAK = 0x15;
 
   private final InputStream inputStream;
   private final OutputStream outputStream;
@@ -76,7 +73,9 @@ public class FP705Printer implements ReceiptPrinter {
   public void printReceipt(Receipt receipt) throws IOException {
     byte seq = SEQ_START;
 
-    printResponse(sendPacket(buildPacket(seq++, TEXT_RECEIPT_OPEN, "")));
+    Response response = sendPacket(buildPacket(seq++, TEXT_RECEIPT_OPEN, ""));
+
+    printResponse(response);
 
     for (String prefix : receipt.prefixLines()) {
       printResponse(sendPacket(buildPacket(seq++, TEXT_RECEIPT_PRINT_TEXT, params(prefix))));
@@ -102,12 +101,12 @@ public class FP705Printer implements ReceiptPrinter {
 
   public void reportForPeriod(LocalDate start, LocalDate end) throws IOException {
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yy");
-    
+
     String type = "0";
     String from = start.format(formatter);
     String to = end.format(formatter);
 
-    String data = params(type, "", "");
+    String data = params(type, from, to);
     printResponse(sendPacket(buildPacket(SEQ_START, FISCAL_MEMORY_REPORT_BY_DATE, data)));
   }
 
@@ -116,7 +115,7 @@ public class FP705Printer implements ReceiptPrinter {
    * state after the operation.
    *
    * @param operatorId the id of the operator for which report need to be issued
-   * @param state the prefferred state after operation completes
+   * @param state      the prefferred state after operation completes
    * @throws IOException is thrown in case of IO error
    */
   public void reportForOperator(String operatorId, RegisterState state) throws IOException {
@@ -130,7 +129,7 @@ public class FP705Printer implements ReceiptPrinter {
     if (state == RegisterState.CLEAR) {
       clearRegister = "1";
     }
-    
+
     printResponse(sendPacket(buildPacket(SEQ_START, REPORT_OPERATORS, params(operatorId, operatorId, clearRegister))));
   }
 
@@ -174,13 +173,6 @@ public class FP705Printer implements ReceiptPrinter {
   public Set<String> getStatus() throws IOException {
     Response response = sendPacket(buildPacket(SEQ_START, READ_STATUS_CMD, ""));
     return decodeStatus(response.status());
-  }
-
-  public void paperCut() throws IOException {
-    Response response = sendPacket(buildPacket(SEQ_START, PAPER_CUT_CMD, ""));
-    byte[] status = response.status();
-    Set<String> errors = decodeStatus(status);
-    System.out.println(errors);
   }
 
   /**
@@ -261,7 +253,7 @@ public class FP705Printer implements ReceiptPrinter {
 
   private Response sendPacket(byte[] request, int maxRetries) throws IOException {
     BufferedSink sink = Okio.buffer(Okio.sink(outputStream));
-    
+
     sink.write(request);
     sink.flush();
 
@@ -350,87 +342,17 @@ public class FP705Printer implements ReceiptPrinter {
   }
 
   private Set<String> decodeStatus(byte[] status) {
+
     Set<String> result = Sets.newLinkedHashSet();
 
-    byte status0 = status[0];
-    if ((status0 & 0x20) == 0x20) {
-      result.add("Fiscal Device General Error");
-    }
-    if ((status0 & 0x02) == 0x02) {
-      result.add("Invalid Command");
-    }
-    if ((status0 & 0x04) == 0x04) {
-      result.add("Date & Time Not Set");
-    }
-    if ((status0 & 0x01) == 0x01) {
-      result.add("Syntax Error");
-    }
+    for (Status each : Status.values()) {
+      if (each.isSetIn(status)) {
 
-    byte status1 = status[1];
-    if ((status1 & 0x01) != 0) {
-      result.add("Overflow during command execution");
-    }
-
-    if ((status1 & 0x02) == 0x02) {
-      result.add("Command is not permitted");
-    }
-
-    byte status2 = status[2];
-    if (isBitSet(status2, 0)) {
-      result.add("End of Paper");
-    }
-    if (isBitSet(status2, 1)) {
-      result.add("Near paper end");
-    }
-    if (isBitSet(status2, 2)) {
-      result.add("EJ is full");
-    }
-    if (isBitSet(status2, 3)) {
-      result.add("Fiscal Receipt is open");
-    }
-    if (isBitSet(status2, 4)) {
-      result.add("EJ nearly full");
-    }
-    if (isBitSet(status2, 5)) {
-      result.add("Nonfiscal receipt is open");
-    }
-
-    byte status4 = status[4];
-
-    if (isBitSet(status4, 0)) {
-      result.add("Error while writing in FM");
-    }
-    if (isBitSet(status4, 1)) {
-      result.add("Tax number is set");
-    }
-    if (isBitSet(status4, 2)) {
-      result.add("Serial Number and number FM are set.");
-    }
-    if (isBitSet(status4, 3)) {
-      result.add("There is space for less then 50 reports in Fiscal memory");
-    }
-    if (isBitSet(status4, 4)) {
-      result.add("Fiscal memory is full");
-    }
-
-    byte status5 = status[5];
-    if (isBitSet(status5, 1)) {
-      result.add("FM is formatted");
-    }
-    if (isBitSet(status5, 3)) {
-      result.add("Device is fiscalized");
-    }
-    if (isBitSet(status5, 4)) {
-      result.add("VAT are set at least once");
+        result.add(each.name());
+      }
     }
 
     return result;
   }
-
-  private boolean isBitSet(byte value, int bit) {
-    return (value & (1 << bit)) != 0;
-  }
-
-
 
 }

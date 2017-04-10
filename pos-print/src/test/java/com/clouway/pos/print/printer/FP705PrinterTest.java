@@ -2,9 +2,12 @@ package com.clouway.pos.print.printer;
 
 
 import com.clouway.pos.print.core.RegisterState;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.net.Socket;
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -19,28 +22,28 @@ import static com.clouway.pos.print.client.ReceiptItem.newItem;
 @Ignore
 public class FP705PrinterTest {
 
+  private Socket socket;
+  private FP705Printer printer;
+
+  @Before
+  public void connect() throws IOException {
+    socket = new Socket("172.16.188.37", 4999);
+    printer = new FP705Printer(socket.getInputStream(), socket.getOutputStream());
+  }
+
+  @After
+  public void disconnect() throws IOException {
+    socket.close();
+  }
+
   @Test
   public void happyPath() throws Exception {
-    Socket socket = new Socket("172.16.188.37", 4999);
-
-    FP705Printer printer = new FP705Printer(socket.getInputStream(), socket.getOutputStream());
     String time = printer.getTime();
     System.out.println(time);
   }
 
   @Test
-  public void paperCut() throws Exception {
-    Socket socket = new Socket("172.16.188.37", 4999);
-    FP705Printer printer = new FP705Printer(socket.getInputStream(), socket.getOutputStream());
-    printer.paperCut();
-  }
-
-  @Test
   public void printReceiptWithManyItem() throws Exception {
-    Socket socket = new Socket("172.16.188.37", 4999);
-    socket.setSoTimeout(1000);
-
-    FP705Printer printer = new FP705Printer(socket.getInputStream(), socket.getOutputStream());
     printer.printReceipt(newReceipt().addItems(
             newItem().name("HSI 80/40 - 03/2017").quantity(1d).price(0.10d).build(),
             newItem().name("HSI 80/40 - 04/2017").quantity(1d).price(0.10d).build(),
@@ -50,10 +53,6 @@ public class FP705PrinterTest {
 
   @Test
   public void printReceiptWithSingleItem() throws Exception {
-    Socket socket = new Socket("172.16.188.37", 4999);
-    socket.setSoTimeout(3000);
-
-    FP705Printer printer = new FP705Printer(socket.getInputStream(), socket.getOutputStream());
     printer.printReceipt(newReceipt()
             .currency("BGN")
             .prefixLines(Arrays.asList(
@@ -71,9 +70,6 @@ public class FP705PrinterTest {
 
   @Test
   public void printReceipt() throws Exception {
-    Socket socket = new Socket("172.16.188.37", 4999);
-    FP705Printer printer = new FP705Printer(socket.getInputStream(), socket.getOutputStream());
-
     printer.printFiscalReceipt(
             newReceipt()
                     .prefixLines(Arrays.asList(
@@ -90,17 +86,11 @@ public class FP705PrinterTest {
 
   @Test
   public void testFiscalReportForPeriod() throws Exception {
-    Socket socket = new Socket("172.16.188.37", 4999);
-
-    FP705Printer printer = new FP705Printer(socket.getInputStream(), socket.getOutputStream());
     printer.reportForPeriod(LocalDate.of(2017, 4, 1), LocalDate.of(2017, 4, 10));
   }
 
   @Test
   public void testFiscalReport() throws Exception {
-    Socket socket = new Socket("172.16.188.37", 4999);
-
-    FP705Printer printer = new FP705Printer(socket.getInputStream(), socket.getOutputStream());
     printer.reportForOperator("1", RegisterState.CLEAR);
   }
 
