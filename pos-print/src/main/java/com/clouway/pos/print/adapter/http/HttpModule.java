@@ -10,5 +10,6 @@ public class HttpModule extends SitebricksModule {
   @Override
   protected void configureSitebricks() {
     at("/_status").serve(StatusService.class);
+    at("/v1/devices").serve(CashRegistersService.class);
   }
 }
