@@ -1,5 +1,6 @@
 package com.clouway.pos.print.adapter.http;
 
+import com.clouway.pos.print.persistent.PersistentModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceFilter;
@@ -38,7 +39,7 @@ public class HttpBackend {
     context.addEventListener(new GuiceServletContextListener() {
       @Override
       protected Injector getInjector() {
-        return Guice.createInjector(new HttpModule());
+        return Guice.createInjector(new HttpModule(), new PersistentModule());
       }
     });
 
