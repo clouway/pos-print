@@ -42,4 +42,13 @@ class PersistentCashRegisterRepositoryTest {
     repository.register(CashRegister("any ip", "any ip", "any description"))
     repository.register(CashRegister("any ip", "any ip", "any description"))
   }
+
+  @Test
+  fun findBySourceIp() {
+    val expected = CashRegister("sourceIp", "any ip 1", "any description")
+    repository.register(expected)
+    val actual = repository.getBySourceIp("sourceIp").get()
+
+    assert(actual.equals(expected))
+  }
 }

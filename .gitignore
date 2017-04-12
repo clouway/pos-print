@@ -6,3 +6,6 @@ out
 *.ipr
 *.iws
 .idea
+gradlew.bat
+gradlew
+gradle/wrapper/*

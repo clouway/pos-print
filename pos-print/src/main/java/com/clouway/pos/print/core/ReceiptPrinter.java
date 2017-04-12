@@ -24,4 +24,11 @@ public interface ReceiptPrinter {
    * @throws IOException in case of failure
    */
   void printFiscalReceipt(Receipt receipt) throws IOException;
+
+  /**
+   * Closes communication with the printer
+   *
+   * @throws IOException in case of failure
+   */
+  void close() throws IOException;
 }
