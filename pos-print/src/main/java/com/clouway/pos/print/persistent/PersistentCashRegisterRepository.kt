@@ -7,12 +7,12 @@ import com.google.inject.Provider
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
 import org.bson.Document
+import java.util.*
 
 /**
  *@author Borislav Gadjev <borislav.gadjev@clouway.com>
  */
 class PersistentCashRegisterRepository @Inject constructor(private val database: Provider<MongoDatabase>) : CashRegisterRepository {
-
   override fun register(record: CashRegister): String {
     val result = devices().find(Document().append("sourceIp", record.sourceIp))
 
@@ -26,7 +26,6 @@ class PersistentCashRegisterRepository @Inject constructor(private val database:
     return record.destination
   }
 
-
   override fun getAll(): List<CashRegister> {
     var cashRegisters = Lists.newArrayList<CashRegister>()
     var cursor = devices().find()
@@ -36,6 +35,16 @@ class PersistentCashRegisterRepository @Inject constructor(private val database:
     }
 
     return cashRegisters
+  }
+
+  override fun getBySourceIp(sourceIp: String): Optional<CashRegister> {
+    val result = devices().find(Document().append("sourceIp", sourceIp))
+
+    if (result.first() == null) {
+      return Optional.empty()
+    }
+
+    return Optional.of(adapt(result.first()))
   }
 
   private fun adapt(record: Document): CashRegister {

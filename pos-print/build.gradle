@@ -8,7 +8,6 @@ buildscript {
   dependencies {
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.4'
-
   }
 }
 
@@ -61,7 +60,6 @@ dependencies {
   compile('com.google.sitebricks:sitebricks-client:0.8.11') {
     exclude module: 'guice'
     exclude module: 'guice-servlet'
-    exclude module: 'jackson-databind'
     exclude module: 'sitebricks-converter'
     exclude module: 'async-http-client'
     exclude module: 'jcip-annotations'
@@ -72,7 +70,6 @@ dependencies {
     exclude module: 'guice'
     exclude module: 'guice-servlet'
     exclude module: 'guice-multibindings'
-    exclude module: 'jackson-databind'
   }
   compile 'com.google.sitebricks:sitebricks-annotations:0.8.11'
   compile('dom4j:dom4j:1.6.1') {
@@ -96,10 +93,11 @@ dependencies {
   compile 'com.github.fakemongo:fongo:2.0.9'
 
   compile 'com.github.spullara.cli-parser:cli-parser:1.1'
+  compile 'com.google.code.gson:gson:2.8.0'
+  compile 'javax.validation:validation-api:1.1.0.Final'
 
   testCompile 'junit:junit:4.11', 'org.jmock:jmock:2.6.0', 'org.jmock:jmock-junit4:2.8.2'
 }
-
 
 test {
   // set heap size for the test JVM(s)

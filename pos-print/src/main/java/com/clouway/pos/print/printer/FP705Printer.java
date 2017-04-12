@@ -61,8 +61,11 @@ public class FP705Printer implements ReceiptPrinter {
 
   private static final byte SYN = 0x16;
 
-  private final InputStream inputStream;
-  private final OutputStream outputStream;
+  private InputStream inputStream;
+  private OutputStream outputStream;
+
+  public FP705Printer() {
+  }
 
   public FP705Printer(InputStream inputStream, OutputStream outputStream) {
     this.inputStream = inputStream;
@@ -161,6 +164,11 @@ public class FP705Printer implements ReceiptPrinter {
 
     printResponse(sendPacket(buildPacket(seq, FISCAL_RECEIPT_TOTAL, params("0", String.format("%.2f", sum)))));
     printResponse(sendPacket(buildPacket(seq, FISCAL_RECEIPT_CLOSE, "")));
+  }
+
+  @Override
+  public void close() throws IOException {
+    outputStream.close();
   }
 
   /**

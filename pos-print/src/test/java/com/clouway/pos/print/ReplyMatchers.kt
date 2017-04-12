@@ -68,6 +68,9 @@ class ReplyMatchers {
     val isForbidden: Matcher<Reply<*>>
       get() = returnCodeMatcher(SC_FORBIDDEN)
 
+    fun isStatus(status: Int): Matcher<Reply<*>> {
+      return returnCodeMatcher(status)
+    }
 
     private fun returnCodeMatcher(expectedCode: Int): Matcher<Reply<*>> {
       return object : TypeSafeMatcher<Reply<*>>() {
