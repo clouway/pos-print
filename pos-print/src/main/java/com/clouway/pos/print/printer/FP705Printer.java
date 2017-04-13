@@ -5,6 +5,7 @@ import com.clouway.pos.print.client.Receipt;
 import com.clouway.pos.print.client.ReceiptItem;
 import com.clouway.pos.print.core.ReceiptPrinter;
 import com.clouway.pos.print.core.RegisterState;
+import com.clouway.pos.print.core.RequestTimeoutException;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Bytes;
 import okio.Buffer;
@@ -105,12 +106,18 @@ public class FP705Printer implements ReceiptPrinter {
   public void reportForPeriod(LocalDate start, LocalDate end) throws IOException {
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yy");
 
-    String type = "1";
+    String type = "0";
     String from = start.format(formatter);
     String to = end.format(formatter);
-
     String data = params(type, from, to);
-    printResponse(sendPacket(buildPacket(SEQ_START, FISCAL_MEMORY_REPORT_BY_DATE, data)));
+
+    final int retryAttempts = 3;
+    try {
+      Response response = sendPacket(buildPacket(SEQ_START, FISCAL_MEMORY_REPORT_BY_DATE, data), retryAttempts);
+      printResponse(response);
+    } catch (RequestTimeoutException e) {
+      // nop as  this operation is no returning anything
+    }
   }
 
   /**
@@ -132,8 +139,15 @@ public class FP705Printer implements ReceiptPrinter {
     if (state == RegisterState.CLEAR) {
       clearRegister = "1";
     }
+    final int retryAttempts = 3;
+    
+    try {
 
-    printResponse(sendPacket(buildPacket(SEQ_START, REPORT_OPERATORS, params(operatorId, operatorId, clearRegister))));
+      sendPacket(buildPacket(SEQ_START, REPORT_OPERATORS, params(operatorId, operatorId, clearRegister)), retryAttempts);
+    } catch (RequestTimeoutException e) {
+      // nop as  this operation is no returning anything
+    }
+
   }
 
   @Override
@@ -202,7 +216,12 @@ public class FP705Printer implements ReceiptPrinter {
       System.out.print(String.format("0x%02X, ", b));
     }
     System.out.println();
-    System.out.println("Data: " + new String(response.data()));
+    System.out.printf("Data (%d): ", response.data().length);
+    for (byte b : response.data()) {
+      System.out.printf("0x%02X ", b);
+    }
+    System.out.println();
+    
     System.out.println("Status: " + decodeStatus(response.status()));
   }
 
@@ -241,33 +260,18 @@ public class FP705Printer implements ReceiptPrinter {
 
   private Response sendPacket(byte[] request) throws IOException {
     final int maxRetries = 10;
-    System.out.println("========================");
-
-    System.out.print("Request: ");
-    for (byte b : request) {
-      System.out.printf("0x%02X, ", b);
-    }
-
-    Response response = sendPacket(request, maxRetries);
-
-    printResponse(response);
-    byte[] data = response.data();
-    System.out.println("Data: ");
-    for (byte b : data) {
-      System.out.printf("0x%02X, ", b);
-    }
-    
-    if (!response.isSuccessful()) {
-
-      throw new IllegalStateException("Got bad response from device.");
-    }
-
-    return response;
+    return sendPacket(request, maxRetries);
   }
 
   private Response sendPacket(byte[] request, int maxRetries) throws IOException {
     BufferedSink sink = Okio.buffer(Okio.sink(outputStream));
 
+    System.out.println("========================");
+    System.out.print("Request: ");
+    for (byte b : request) {
+      System.out.printf("0x%02X, ", b);
+    }
+    
     sink.write(request);
     sink.flush();
 
@@ -303,7 +307,7 @@ public class FP705Printer implements ReceiptPrinter {
       }
     }
 
-    throw new IOException(String.format("unable to get response after %d retries", maxRetries));
+    throw new RequestTimeoutException(String.format("unable to get response after %d retries", maxRetries));
   }
 
   private byte[] calcBCC(byte[] data, byte seq, byte cmd) {

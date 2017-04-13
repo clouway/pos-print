@@ -26,8 +26,6 @@ import static org.junit.Assert.assertThat;
 public class FP705PrinterTest {
   private FakeFP705 fakeFP705 = new FakeFP705();
 
-  private FP705Printer printer;
-
   @Before
   public void connect() throws IOException {
     fakeFP705.startAsync().awaitRunning();
@@ -128,11 +126,11 @@ public class FP705PrinterTest {
             // Print empty line
             new Flow(
                     new byte[]{
-                            0x01, 0x30, 0x30, 0x32, 0x3B, 0x24, 0x30, 0x30, 0x32, 0x3A, 0x09, 0x05, 0x30, 0x31, 0x3C,
-                            0x3A, 0x03
+                            0x01, 0x30, 0x30, 0x32, 0x3B, 0x25, 0x30, 0x30, 0x32, 0x3A, 0x09, 0x05, 0x30, 0x31, 0x3C,
+                            0x3C, 0x03,
                     },
                     new byte[]{
-                            0x01, 0x30, 0x30, 0x33, 0x35, 0x24, 0x30, 0x30, 0x32, 0x3A, 0x30, 0x09, 0x04, (byte) 0x80,
+                            0x01, 0x30, 0x30, 0x33, 0x35, 0x25, 0x30, 0x30, 0x32, 0x3A, 0x30, 0x09, 0x04, (byte) 0x80,
                             (byte) 0x80, (byte) 0xA0, (byte) 0x80, (byte) 0x86, (byte) 0x9A, (byte) 0x80, (byte) 0x80,
                             0x05, 0x30, 0x36, 0x33, 0x39, 0x03,
                     }
@@ -140,11 +138,11 @@ public class FP705PrinterTest {
             // Print empty line
             new Flow(
                     new byte[]{
-                            0x01, 0x30, 0x30, 0x32, 0x3B, 0x25, 0x30, 0x30, 0x32, 0x3A, 0x09, 0x05, 0x30, 0x31, 0x3C,
-                            0x3A, 0x03
+                            0x01, 0x30, 0x30, 0x32, 0x3B, 0x26, 0x30, 0x30, 0x32, 0x3A, 0x09, 0x05, 0x30, 0x31, 0x3C,
+                            0x3D, 0x03
                     },
                     new byte[]{
-                            0x01, 0x30, 0x30, 0x33, 0x35, 0x25, 0x30, 0x30, 0x32, 0x3A, 0x30, 0x09, 0x04, (byte) 0x80,
+                            0x01, 0x30, 0x30, 0x33, 0x35, 0x26, 0x30, 0x30, 0x32, 0x3A, 0x30, 0x09, 0x04, (byte) 0x80,
                             (byte) 0x80, (byte) 0xA0, (byte) 0x80, (byte) 0x86, (byte) 0x9A, (byte) 0x80, (byte) 0x80,
                             0x05, 0x30, 0x36, 0x33, 0x39, 0x03,
                     }
@@ -187,7 +185,6 @@ public class FP705PrinterTest {
             ).build()
     );
   }
-
 
   @Test
   public void printReceipt() throws Exception {
@@ -291,7 +288,7 @@ public class FP705PrinterTest {
                     }
             )
     );
-    
+
     printer().printFiscalReceipt(
             newReceipt()
                     .prefixLines(Collections.singletonList(
@@ -302,23 +299,39 @@ public class FP705PrinterTest {
                             newItem().name("HSI 80/40").quantity(1d).price(0.10d).build()
                     ).build()
     );
+  }
+
+  @Test
+  public void fiscalReportForPeriod() throws Exception {
+    fakeFP705.prepareFlows(
+            new Flow(
+                    new byte[]{0x01, 0x30, 0x30, 0x33, 0x3E, 0x20, 0x30, 0x30, 0x35, 0x3E, 0x30, 0x09, 0x30, 0x31, 0x2D, 0x30,
+                            0x34, 0x2D, 0x31, 0x37, 0x09, 0x31, 0x33, 0x2D, 0x30, 0x34, 0x2D, 0x31, 0x37, 0x09, 0x05, 0x30, 0x35,
+                            0x32, 0x35, 0x03},
+                    new byte[]{0x16} //response is not relative
+            ));
+    printer().reportForPeriod(LocalDate.of(2017, 4, 1), LocalDate.of(2017, 4, 13));
+  }
+
+  @Test
+  public void fiscalReportWithKeep() throws Exception {
+    fakeFP705.prepareFlows(
+            new Flow(
+                    new byte[]{0x01, 0x30, 0x30, 0x33, 0x30, 0x20, 0x30, 0x30, 0x36, 0x39, 0x31, 0x09, 0x31, 0x09, 0x30, 0x09, 0x05, 0x30, 0x32, 0x36, 0x34, 0x03},
+                    new byte[]{0x16} //response is not relative
+            ));
+    printer().reportForOperator("1", RegisterState.KEEP);
     
   }
 
   @Test
-  public void testFiscalReportForPeriod() throws Exception {
-    Socket socket = new Socket("172.16.188.37", 4999);
-
-    printer = new FP705Printer(socket.getInputStream(), socket.getOutputStream());
-    printer.reportForPeriod(LocalDate.of(2017, 4, 1), LocalDate.of(2017, 4, 13));
-  }
-
-  @Test
-  public void testFiscalReport() throws Exception {
-    Socket socket = new Socket("172.16.188.37", 4999);
-    printer = new FP705Printer(socket.getInputStream(), socket.getOutputStream());
-
-    printer.reportForOperator("1", RegisterState.CLEAR);
+  public void fiscalReportWithClear() throws Exception {
+    fakeFP705.prepareFlows(
+            new Flow(
+                    new byte[]{0x01, 0x30, 0x30, 0x33, 0x30, 0x20, 0x30, 0x30, 0x36, 0x39, 0x31, 0x09, 0x31, 0x09, 0x31, 0x09, 0x05, 0x30, 0x32, 0x36, 0x35, 0x03},
+                    new byte[]{0x16} //response is not relative
+            ));
+    printer().reportForOperator("1", RegisterState.CLEAR);
   }
 
   private FP705Printer printer() throws IOException {
