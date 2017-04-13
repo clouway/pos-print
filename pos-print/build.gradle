@@ -89,6 +89,14 @@ dependencies {
   compile 'com.fasterxml.jackson.core:jackson-core:2.8.0'
   compile 'com.fasterxml.jackson.core:jackson-databind:2.8.0'
 
+  //MongoDatabase
+  compile 'org.mongodb:mongodb-driver:3.4.2'
+
+  //FongoDatabase
+  compile 'com.github.fakemongo:fongo:2.0.9'
+
+  compile 'com.github.spullara.cli-parser:cli-parser:1.1'
+
   testCompile 'junit:junit:4.11', 'org.jmock:jmock:2.6.0', 'org.jmock:jmock-junit4:2.8.2'
 }
 
