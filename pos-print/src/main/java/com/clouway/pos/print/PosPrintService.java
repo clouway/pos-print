@@ -1,6 +1,8 @@
 package com.clouway.pos.print;
 
 import com.clouway.pos.print.adapter.http.HttpBackend;
+import com.clouway.pos.print.core.CommandCLI;
+import com.sampullara.cli.Args;
 
 /**
  * @author Miroslav Genov (miroslav.genov@clouway.com)
@@ -9,12 +11,14 @@ public class PosPrintService {
 
   public static void main(String[] args) {
 
-    final int httpPort = 8080;
+    CommandCLI commandCLI = new CommandCLI();
 
-    HttpBackend backend = new HttpBackend(httpPort);
+    Args.parse(commandCLI, args);
+
+    HttpBackend backend = new HttpBackend(commandCLI);
     backend.start();
     
-    System.out.printf("POS Print Service is up and running on port: %d", httpPort);
+    System.out.printf("POS Print Service is up and running on port: %d", commandCLI.httpPort());
 
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       System.out.printf("POS Print Service is going to shutdown.");

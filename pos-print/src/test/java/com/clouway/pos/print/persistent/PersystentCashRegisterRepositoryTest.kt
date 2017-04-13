@@ -2,14 +2,25 @@ package com.clouway.pos.print.persistent
 
 import com.clouway.pos.print.core.CashRegister
 import com.google.common.collect.Lists
+import com.google.inject.util.Providers
+import org.junit.ClassRule
+import org.junit.Rule
 import org.junit.Test
 
 /**
  *@author Borislav Gadjev <borislav.gadjev@clouway.com>
  */
-class InMemoryCashRegisterRepositoryTest {
+class PersistentCashRegisterRepositoryTest {
 
-  private val repository = InMemoryCashRegisterRepository()
+  companion object {
+    @ClassRule @JvmField
+    val dataStoreRule = DatastoreRule()
+  }
+
+  @Rule @JvmField
+  var cleaner = DatastoreCleaner(dataStoreRule.db())
+
+  private val repository = PersistentCashRegisterRepository(Providers.of(dataStoreRule.db()))
 
   @Test
   fun happyPath() {
