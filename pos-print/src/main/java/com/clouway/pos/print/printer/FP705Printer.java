@@ -74,7 +74,6 @@ public class FP705Printer implements ReceiptPrinter {
     byte seq = SEQ_START;
 
     Response response = sendPacket(buildPacket(seq++, TEXT_RECEIPT_OPEN, ""));
-
     printResponse(response);
 
     for (String prefix : receipt.prefixLines()) {
@@ -95,14 +94,15 @@ public class FP705Printer implements ReceiptPrinter {
     for (String suffix : receipt.suffixLines()) {
       printResponse(sendPacket(buildPacket(seq++, TEXT_RECEIPT_PRINT_TEXT, params(suffix))));
     }
-
+    
     printResponse(sendPacket(buildPacket(seq, TEXT_RECEIPT_CLOSE, "")));
   }
+
 
   public void reportForPeriod(LocalDate start, LocalDate end) throws IOException {
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yy");
 
-    String type = "0";
+    String type = "1";
     String from = start.format(formatter);
     String to = end.format(formatter);
 
@@ -142,13 +142,13 @@ public class FP705Printer implements ReceiptPrinter {
     for (String prefix : receipt.prefixLines()) {
       printResponse(sendPacket(buildPacket(seq++, FISCAL_RECEIPT_PRINT_TEXT, params(prefix))));
     }
+
     printResponse(sendPacket(buildPacket(seq++, FISCAL_RECEIPT_PRINT_TEXT, params(""))));
 
     double sum = 0;
     for (ReceiptItem item : receipt.getReceiptItems()) {
       String priceValue = String.format("%.2f", item.getPrice());
       String quantityValue = String.format("%.3f", item.getQuantity());
-      System.out.println(priceValue);
       printResponse(sendPacket(buildPacket(seq++, FISCAL_RECEIPT_PAYMENT, params(item.getName(), "1", priceValue, quantityValue, "0", "", "0"))));
       sum += item.getPrice() * item.getQuantity();
     }
@@ -242,7 +242,13 @@ public class FP705Printer implements ReceiptPrinter {
 
     Response response = sendPacket(request, maxRetries);
 
-    System.out.println();
+    printResponse(response);
+    byte[] data = response.data();
+    System.out.println("Data: ");
+    for (byte b : data) {
+      System.out.printf("0x%02X, ", b);
+    }
+    
     if (!response.isSuccessful()) {
 
       throw new IllegalStateException("Got bad response from device.");
@@ -271,7 +277,7 @@ public class FP705Printer implements ReceiptPrinter {
         long from = buffer.indexOf((byte) 0x01);
         long to = buffer.indexOf((byte) 0x03);
 
-        if (from > 0 & to > 0) {
+        if (from >= 0 & to > 0) {
           buffer.skip(from);
           byte[] content = buffer.readByteArray(to - from + 1);
 
