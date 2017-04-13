@@ -1,0 +1,80 @@
+swagger: '2.0'
+info:
+  title: POS Print API
+  description: Application for cash registers operations
+  version: "1.0.0"
+host: yourname.telcong.com
+schemes:
+  - https
+basePath: /
+produces:
+  - application/json
+paths:
+  /v1/devices:
+    get:
+      summary: Retrieve cash registers
+      description: |
+        Retrieves all cash registers in the database
+      tags:
+        - Retrieves
+      responses:
+        200:
+          description: An array of products
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/DeviceRegistrationRequest'
+  /v1/devices:
+    post:
+      summary: Registers device
+      parameters:
+        - in: body
+          name: request
+          description: Registers a single cash register device
+          required: true
+          schema:
+            $ref: '#/definitions/DeviceRegistrationRequest'
+      tags:
+        - Registers
+      responses:
+        201:
+          description: The destination of the registered device
+          type: object
+          schema:
+            $ref: '#/definitions/DeviceRegistrationResponse'
+        400:
+          description: Device already exists
+          schema:
+            $ref: '#/definitions/Error'
+definitions:
+  DeviceRegistrationRequest:
+    type: object
+    properties:
+      sourceIp:
+        type: string
+        description: Unique ip representing the owner of the device.
+        example: '89.100.10.5'
+      destination:
+        type: string
+        description: Unique ip representing the endpoint of the device.
+        example: '10.10.5.7'
+      desciption:
+        type: string
+        description: Description for the device.
+        example: 'Cash register one'
+  DeviceRegistrationResponse:
+    type: object
+    properties:
+      destination:
+        type: string
+        description: Unique ip representing the endpoint of the device.
+  Error:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+        example: 400
+      message:
+        type: string
+        example: 'Is already present'
