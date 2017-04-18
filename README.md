@@ -18,25 +18,38 @@ of simple receipt.
 
 ```javascript
 {
-    "key": "ag5jbG91d2F5dGVzdGFwcHI2CxIFT3JkZXIiHjdlZjY5MDQwNGU0N2Q1YjM2NmVmZjY1MDVhMzgyNwwLEgdSZWNlaXB0GBYM",
-    "printingIp": "192.168.5.6",
-    "customerDetails": {
-        "address": "",
-        "contractNumber": "Invoice0150061720/09/11/2007"
-    },
-    "transactionNumber": "7ef690404e47d5b366eff6505a3827",
-    "cashierName": "John Smith",
-    "printingDate": "2011-12-01 18:00:00",
-    "receiptType": 1,
-    "receiptItems": [
-        {
-            "name": "Invoice0150061720/09/11/2007",
-            "quantity": 1,
-            "price": 0.01
+  "properties": {
+    "sourceIp": "89.100.10.5",
+    "operatorId": "1",
+    "fiscal": true,
+    "receipt": {
+      "properties": {
+        "receiptId": "123",
+        "currency": "USD",
+        "prefixLines": [
+          "Customer: John"
+        ],
+        "suffixLines": [
+          
+        ],
+        "amount": 1.0,
+        "receiptItems": [
+            {
+            "properties": {
+              "name": {
+                  "type": "string",
+                  "description": "Name of the item",
+                  "example": null
+                },
+                "quantity": 2.0,
+                "price": 1.0
+              }
+            }
+          ]
         }
-    ],
-    "amount": 0.01,
-    "department": "01"
+      }
+    }
+  }
 }
 ```
 
