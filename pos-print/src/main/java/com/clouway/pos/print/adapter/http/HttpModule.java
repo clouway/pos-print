@@ -1,9 +1,5 @@
 package com.clouway.pos.print.adapter.http;
 
-import com.clouway.pos.print.core.PrinterFactory;
-import com.clouway.pos.print.core.ReceiptPrinter;
-import com.clouway.pos.print.printer.FP705Printer;
-import com.clouway.pos.print.printer.FP705PrinterFactory;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.google.sitebricks.SitebricksModule;
@@ -20,8 +16,9 @@ public class HttpModule extends AbstractModule {
       @Override
       protected void configureSitebricks() {
         at("/_status").serve(StatusService.class);
-        at("/v1/posprint").serve(PrintService.class);
+        at("/v1/receipts/req/print").serve(PrintService.class);
         at("/v1/devices").serve(CashRegistersService.class);
+        at("/v1/reports").serve(ReportService.class);
       }
     };
 
