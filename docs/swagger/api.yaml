@@ -13,8 +13,7 @@ paths:
   /v1/devices:
     get:
       summary: Retrieve cash registers
-      description: |
-        Retrieves all cash registers in the database
+      description: Retrieves all cash registers
       tags:
         - Retrieves
       responses:
@@ -24,7 +23,6 @@ paths:
             type: array
             items:
               $ref: '#/definitions/DeviceRegistrationRequest'
-  /v1/devices:
     post:
       summary: Registers device
       parameters:
@@ -39,13 +37,38 @@ paths:
       responses:
         201:
           description: The destination of the registered device
-          type: object
           schema:
-            $ref: '#/definitions/DeviceRegistrationResponse'
+            type: object
+            items:
+              $ref: '#/definitions/DeviceRegistrationResponse'
         400:
           description: Device already exists
           schema:
             $ref: '#/definitions/Error'
+
+  /v1/posprint:
+    post:
+      summary: Print Receipts
+      parameters:
+        - in: body
+          name: request
+          description: Prining receipts and fiscal receipts
+          required: true
+          schema:
+            $ref: '#/definitions/PrintReceiptRequest'
+      description: Prining receipts and fiscal receipts
+      responses:
+        200:
+          description: OK
+        400:
+          description: Device not found
+          schema:
+            $ref: "#/definitions/Error"
+        480:
+          description: Device can't connect
+          schema:
+            $ref: "#/definitions/Error"
+
 definitions:
   DeviceRegistrationRequest:
     type: object
@@ -68,6 +91,63 @@ definitions:
       destination:
         type: string
         description: Unique ip representing the endpoint of the device.
+  PrintReceiptRequest:
+    type: object
+    properties:
+      sourceIp:
+        type: string
+        description: Unique ip representing the owner of the device.
+        example: 89.100.10.5
+      operatorId:
+        type: string
+        description: Unique id representing the operator for the device.
+        example: "1"
+      fiscal:
+        type: boolean
+        description: true means fiscal receipt, false means text
+      receipt:
+        type: object
+        description: Represents receipt item
+        properties:
+          receiptId:
+            type: string
+            description: Receipt ID
+            example: "123"
+          currency:
+            type: string
+            description: Currency
+            example: "USD"
+          prefixLines:
+            type: array
+            items:
+              type: string
+          suffixLines:
+            type: array
+            items:
+              type: string
+          amount:
+            type: number
+            format: double
+            description: amount to be paid
+            example: 1.0
+          receiptItems:
+            type: object
+            description: Represents receipt item
+            properties:
+              name:
+                type: string
+                description: Name of the item
+                example:
+              quantity:
+                type: number
+                format: double
+                description: Quantity of the item
+                example: 2.0
+              price:
+                type: number
+                format: double
+                description: Price of the item
+                example: 1.0
   Error:
     type: object
     properties:
