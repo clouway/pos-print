@@ -13,8 +13,8 @@ import java.net.Socket;
 import java.time.LocalDate;
 import java.util.Collections;
 
-import static com.clouway.pos.print.client.Receipt.newReceipt;
-import static com.clouway.pos.print.client.ReceiptItem.newItem;
+import static com.clouway.pos.print.core.Receipt.newReceipt;
+import static com.clouway.pos.print.core.ReceiptItem.newItem;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;

@@ -1,8 +1,8 @@
 package com.clouway.pos.print.printer;
 
 
-import com.clouway.pos.print.client.Receipt;
-import com.clouway.pos.print.client.ReceiptItem;
+import com.clouway.pos.print.core.Receipt;
+import com.clouway.pos.print.core.ReceiptItem;
 import com.clouway.pos.print.core.ReceiptPrinter;
 import com.clouway.pos.print.core.RegisterState;
 import com.clouway.pos.print.core.RequestTimeoutException;

@@ -2,7 +2,7 @@ package com.clouway.pos.print;
 
 import com.clouway.pos.print.adapter.http.HttpBackend;
 import com.clouway.pos.print.adapter.http.HttpModule;
-import com.clouway.pos.print.core.CommandCLI;
+import com.clouway.pos.print.core.CoreModule;
 import com.clouway.pos.print.persistent.PersistentModule;
 import com.google.common.collect.Lists;
 import com.google.inject.Guice;
@@ -22,18 +22,26 @@ public class PosPrintService {
   private static final Integer MAX_RETRY_ATTEMPTS = 10;
 
   public static void main(String[] args) {
-
     CommandCLI commandCLI = new CommandCLI();
-
-    Args.parse(commandCLI, args);
+    try {
+      Args.parse(commandCLI, args);
+    } catch (IllegalArgumentException e) {
+      Args.usage(commandCLI);
+      System.exit(-1);
+      return;
+    }
 
     MongoClient client = establishMongoDbConnection(commandCLI.dbHost());
 
-    Injector injector = Guice.createInjector(new HttpModule(), new PersistentModule(client,commandCLI.dbName()));
+    Injector injector = Guice.createInjector(
+      new CoreModule(),
+      new HttpModule(),
+      new PersistentModule(client, commandCLI.dbName())
+    );
 
     HttpBackend backend = new HttpBackend(commandCLI.httpPort(), injector);
     backend.start();
-    
+
     System.out.printf("POS Print Service is up and running on port: %d", commandCLI.httpPort());
 
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -46,8 +54,6 @@ public class PosPrintService {
       System.out.printf("POS Print Service goes down.");
     }));
   }
-
-
 
   private static MongoClient establishMongoDbConnection(List<String> hosts) {
     List<ServerAddress> replicaSet = Lists.newArrayList();

@@ -26,7 +26,5 @@ public class HttpModule extends AbstractModule {
     };
 
     install(pageBricks);
-
-    bind(PrinterFactory.class).to(FP705PrinterFactory.class);
   }
 }

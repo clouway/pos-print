@@ -1,7 +1,5 @@
 package com.clouway.pos.print.core;
 
-import com.clouway.pos.print.client.Receipt;
-
 import java.io.IOException;
 
 /**
