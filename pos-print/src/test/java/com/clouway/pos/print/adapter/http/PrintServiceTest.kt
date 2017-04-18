@@ -5,7 +5,7 @@ import com.clouway.pos.print.ReplyMatchers.Companion.isBadRequest
 import com.clouway.pos.print.ReplyMatchers.Companion.isOk
 import com.clouway.pos.print.ReplyMatchers.Companion.isStatus
 import com.clouway.pos.print.SiteBricksRequestMockery
-import com.clouway.pos.print.client.Receipt
+import com.clouway.pos.print.core.Receipt
 import com.clouway.pos.print.core.DeviceNotFoundException
 import com.clouway.pos.print.core.ErrorResponse
 import com.clouway.pos.print.core.PrinterFactory

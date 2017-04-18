@@ -10,7 +10,6 @@ import com.google.inject.AbstractModule
 class CoreModule : AbstractModule() {
 
   override fun configure() {
-    bind(ReceiptPrinter::class.java).to(FP705Printer::class.java)
     bind(PrinterFactory::class.java).to(FP705PrinterFactory::class.java)
   }
 }

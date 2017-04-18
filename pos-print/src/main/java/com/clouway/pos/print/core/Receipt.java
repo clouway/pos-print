@@ -1,4 +1,4 @@
-package com.clouway.pos.print.client;
+package com.clouway.pos.print.core;
 
 import java.util.ArrayList;
 import java.util.Arrays;

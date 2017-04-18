@@ -1,7 +1,7 @@
 package com.clouway.pos.print.adapter.http
 
-import com.clouway.pos.print.client.Receipt
-import com.clouway.pos.print.client.Receipt.newReceipt
+import com.clouway.pos.print.core.Receipt
+import com.clouway.pos.print.core.Receipt.newReceipt
 import com.clouway.pos.print.core.DeviceNotFoundException
 import com.clouway.pos.print.core.ErrorResponse
 import com.clouway.pos.print.core.PrinterFactory

@@ -1,4 +1,4 @@
-package com.clouway.pos.print.client;
+package com.clouway.pos.print.core;
 
 /**
  * @author Lazo Apostolovski (lazo.apostolovski@clouway.com)

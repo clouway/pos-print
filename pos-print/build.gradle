@@ -92,7 +92,7 @@ dependencies {
   //FongoDatabase
   compile 'com.github.fakemongo:fongo:2.0.9'
 
-  compile 'com.github.spullara.cli-parser:cli-parser:1.1'
+  compile 'com.github.spullara.cli-parser:cli-parser:1.1.2'
   compile 'com.google.code.gson:gson:2.8.0'
   compile 'javax.validation:validation-api:1.1.0.Final'
 
