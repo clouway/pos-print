@@ -46,7 +46,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
-  /v1/posprint:
+  /v1/receipts/req/print:
     post:
       summary: Print Receipts
       parameters:
@@ -60,6 +60,50 @@ paths:
       responses:
         200:
           description: OK
+        400:
+          description: Device not found
+          schema:
+            $ref: "#/definitions/Error"
+        480:
+          description: Device can't connect
+          schema:
+            $ref: "#/definitions/Error"
+
+  /v1/reports/operator/print:
+    post:
+      summary: Prints Report
+      parameters:
+        - in: body
+          name: request
+          description: Prints the report for the given operator
+          required: true
+          schema:
+            $ref: '#/definitions/OperatorReportRequest'
+      responses:
+        200:
+          description: Report completed
+        400:
+          description: Device not found
+          schema:
+            $ref: "#/definitions/Error"
+        480:
+          description: Device can't connect
+          schema:
+            $ref: "#/definitions/Error"
+
+  /v1/reports/periodical/print:
+    post:
+      summary: Prints Report
+      parameters:
+        - in: body
+          name: request
+          description: Prints the report for the given time period
+          required: true
+          schema:
+            $ref: '#/definitions/PeriodReportRequest'
+      responses:
+        200:
+          description: Report completed
         400:
           description: Device not found
           schema:
@@ -148,6 +192,38 @@ definitions:
                 format: double
                 description: Price of the item
                 example: 1.0
+  OperatorReportRequest:
+    type: object
+    properties:
+      sourceIp:
+        type: string
+        description: Unique ip representing the owner of the device.
+        example: 89.100.10.5
+      operatorId:
+        type: string
+        description: Unique id representing the operator for the device.
+        example: "1"
+      registerState:
+        type: string
+        description: the state which the chash register is going to acquire
+        example: CLEAR or KEEP
+  PeriodReportRequest:
+    type: object
+    properties:
+      from:
+        type: string
+        format: date-time
+        description: The starting date for the report
+        example: 2017-04-23T18:25:43.511Z
+      to:
+        type: string
+        format: date-time
+        description: The ending date for the report
+        example: 2017-04-23T18:25:43.511Z
+      sourceIp:
+        type: string
+        description: Unique ip representing the owner of the device.
+        example: 89.100.10.5
   Error:
     type: object
     properties:

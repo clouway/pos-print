@@ -18,7 +18,7 @@ import javax.inject.Inject
  * @author Martin Milev <martin.milev@clouway.com>
  */
 @Service
-@At("/v1/posprint")
+@At("/v1/receipts/req/print")
 class PrintService @Inject constructor(private var factory: PrinterFactory) {
 
   @Post
