@@ -13,8 +13,6 @@ class SiteBricksRequestMockery {
 
   fun <E> mockRequest(request: E): Request {
     return object : Request {
-
-
       private val e = request
 
       override fun <E> read(type: Class<E>): Request.RequestRead<E> {

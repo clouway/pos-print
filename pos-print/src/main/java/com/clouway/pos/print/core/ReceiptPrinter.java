@@ -14,7 +14,7 @@ public interface ReceiptPrinter {
    * @param receipt the receipt to be printed
    * @throws IOException in case of failure
    */
-  void printReceipt(Receipt receipt) throws IOException;
+  PrintReceiptResponse printReceipt(Receipt receipt) throws IOException;
 
   /**
    * Prints receipt on the device.
@@ -22,7 +22,7 @@ public interface ReceiptPrinter {
    * @param receipt the receipt to be printed
    * @throws IOException in case of failure
    */
-  void printFiscalReceipt(Receipt receipt) throws IOException;
+  PrintReceiptResponse printFiscalReceipt(Receipt receipt) throws IOException;
 
   /**
    * Gets report for a given operator by providing options for the preferred register

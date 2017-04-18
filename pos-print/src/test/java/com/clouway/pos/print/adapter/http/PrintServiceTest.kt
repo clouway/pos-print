@@ -5,11 +5,7 @@ import com.clouway.pos.print.ReplyMatchers.Companion.isBadRequest
 import com.clouway.pos.print.ReplyMatchers.Companion.isOk
 import com.clouway.pos.print.ReplyMatchers.Companion.isStatus
 import com.clouway.pos.print.SiteBricksRequestMockery
-import com.clouway.pos.print.core.Receipt
-import com.clouway.pos.print.core.DeviceNotFoundException
-import com.clouway.pos.print.core.ErrorResponse
-import com.clouway.pos.print.core.PrinterFactory
-import com.clouway.pos.print.core.ReceiptPrinter
+import com.clouway.pos.print.core.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.jmock.AbstractExpectations
 import org.jmock.Expectations
@@ -42,12 +38,13 @@ class PrintServiceTest {
         oneOf(factory).getPrinter("sourceIp")
         will(AbstractExpectations.returnValue(printer))
         oneOf(printer).printReceipt(anyReceipt)
+        will(AbstractExpectations.returnValue(PrintReceiptResponse(emptySet())))
         oneOf(printer).close()
       }
     })
 
     val reply = service.printReceipt(request.mockRequest(receiptDto))
-    assertThat(reply,isOk)
+    assertThat(reply, isOk)
   }
 
   @Test
@@ -60,12 +57,13 @@ class PrintServiceTest {
         oneOf(factory).getPrinter("sourceIp")
         will(AbstractExpectations.returnValue(printer))
         oneOf(printer).printFiscalReceipt(anyReceipt)
+        will(AbstractExpectations.returnValue(PrintReceiptResponse(emptySet())))
         oneOf(printer).close()
       }
     })
 
     val reply = service.printReceipt(request.mockRequest(receiptDto))
-    assertThat(reply,isOk)
+    assertThat(reply, isOk)
   }
 
   @Test
