@@ -1,12 +1,7 @@
 package com.clouway.pos.print.printer;
 
 
-import com.clouway.pos.print.core.Receipt;
-import com.clouway.pos.print.core.ReceiptItem;
-import com.clouway.pos.print.core.ReceiptPrinter;
-import com.clouway.pos.print.core.RegisterState;
-import com.clouway.pos.print.core.PeriodType;
-import com.clouway.pos.print.core.RequestTimeoutException;
+import com.clouway.pos.print.core.*;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Bytes;
 import okio.Buffer;
@@ -21,7 +16,11 @@ import java.io.UnsupportedEncodingException;
 import java.net.SocketTimeoutException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
 import java.util.Set;
+
+import static com.clouway.pos.print.printer.Status.FISCAL_RECEIPT_IS_OPEN;
+import static com.clouway.pos.print.printer.Status.NON_FISCAL_RECEIPT_IS_OPEN;
 
 /**
  * FP705 is a printer driver of Datecs's FP705 printer driver.
@@ -35,7 +34,7 @@ public class FP705Printer implements ReceiptPrinter {
   private static final byte READ_STATUS_CMD = (byte) 0x4A;
   private static final byte SEQ_START = (byte) 0x20;
 
-  /*
+  /**
    * Fiscal Receipt Constants
    */
   private static final byte FISCAL_RECEIPT_OPEN = (byte) 0x30;
@@ -54,7 +53,7 @@ public class FP705Printer implements ReceiptPrinter {
    */
   private static final byte REPORT_OPERATORS = (byte) 0x69;
 
-  /*
+  /**
    * Non Fiscal Receipt Constants
    */
   private static final byte TEXT_RECEIPT_OPEN = (byte) 0x26;
@@ -75,37 +74,43 @@ public class FP705Printer implements ReceiptPrinter {
   }
 
   @Override
-  public void printReceipt(Receipt receipt) throws IOException {
+  public PrintReceiptResponse printReceipt(Receipt receipt) throws IOException {
+    IOChannel ioChannel = new IOChannel(inputStream, outputStream);
+    WarningChannel channel = new WarningChannel(ioChannel, new HashSet<Status>());
+
     byte seq = SEQ_START;
 
-    Response response = sendPacket(buildPacket(seq++, TEXT_RECEIPT_OPEN, ""));
-    printResponse(response);
+    checkStatusForOpenReceiptsAndCloseThem(seq, channel);
+
+    channel.sendPacket(buildPacket(seq++, TEXT_RECEIPT_OPEN, ""));
 
     for (String prefix : receipt.prefixLines()) {
-      printResponse(sendPacket(buildPacket(seq++, TEXT_RECEIPT_PRINT_TEXT, params(prefix))));
+      channel.sendPacket(buildPacket(seq++, TEXT_RECEIPT_PRINT_TEXT, params(prefix)));
     }
 
-    printResponse(sendPacket(buildPacket(seq++, TEXT_RECEIPT_PRINT_TEXT, params(""))));
-    printResponse(sendPacket(buildPacket(seq++, TEXT_RECEIPT_PRINT_TEXT, params(""))));
+    channel.sendPacket(buildPacket(seq++, TEXT_RECEIPT_PRINT_TEXT, params("")));
+    channel.sendPacket(buildPacket(seq++, TEXT_RECEIPT_PRINT_TEXT, params("")));
 
     for (ReceiptItem item : receipt.getReceiptItems()) {
       String formattedRow = String.format("%s - %.2f X %.2f %s", item.getName(), item.getQuantity(), item.getPrice(), receipt.getCurrency());
-      printResponse(sendPacket(buildPacket(seq++, TEXT_RECEIPT_PRINT_TEXT, params(formattedRow))));
+      channel.sendPacket(buildPacket(seq++, TEXT_RECEIPT_PRINT_TEXT, params(formattedRow)));
     }
 
-    printResponse(sendPacket(buildPacket(seq++, TEXT_RECEIPT_PRINT_TEXT, params(""))));
-    printResponse(sendPacket(buildPacket(seq++, TEXT_RECEIPT_PRINT_TEXT, params(""))));
+    channel.sendPacket(buildPacket(seq++, TEXT_RECEIPT_PRINT_TEXT, params("")));
+    channel.sendPacket(buildPacket(seq++, TEXT_RECEIPT_PRINT_TEXT, params("")));
 
     for (String suffix : receipt.suffixLines()) {
-      printResponse(sendPacket(buildPacket(seq++, TEXT_RECEIPT_PRINT_TEXT, params(suffix))));
+      channel.sendPacket(buildPacket(seq++, TEXT_RECEIPT_PRINT_TEXT, params(suffix)));
     }
-    
-    printResponse(sendPacket(buildPacket(seq, TEXT_RECEIPT_CLOSE, "")));
+
+    closeNonFiscalReceipt(seq, channel);
+
+    return new PrintReceiptResponse(channel.warnings());
   }
 
   public void reportForPeriod(LocalDateTime start, LocalDateTime end, PeriodType periodType) throws IOException {
     DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
-    
+
     // Command: 94 (5Еh) – fiscal memory report by date
     // Parameters of the command: {Type}<SEP>{Start}<SEP>{End}<SEP> Mandatory parameters:
     //    • Type – 0 – short; 1 – detailed; Optional parameters:
@@ -150,7 +155,7 @@ public class FP705Printer implements ReceiptPrinter {
       clearRegister = "1";
     }
     final int retryAttempts = 3;
-    
+
     try {
 
       sendPacket(buildPacket(SEQ_START, REPORT_OPERATORS, params(operatorId, operatorId, clearRegister)), retryAttempts);
@@ -161,34 +166,41 @@ public class FP705Printer implements ReceiptPrinter {
   }
 
   @Override
-  public void printFiscalReceipt(Receipt receipt) throws IOException {
+  public PrintReceiptResponse printFiscalReceipt(Receipt receipt) throws IOException {
+    IOChannel ioChannel = new IOChannel(inputStream, outputStream);
+    WarningChannel channel = new WarningChannel(ioChannel, new HashSet<Status>());
+
     byte seq = SEQ_START;
 
-    printResponse(sendPacket(buildPacket(seq++, FISCAL_RECEIPT_OPEN, params("1", "0000", "1", ""))));
+    checkStatusForOpenReceiptsAndCloseThem(seq, channel);
+
+    channel.sendPacket(buildPacket(seq++, FISCAL_RECEIPT_OPEN, params("1", "0000", "1", "")));
 
     for (String prefix : receipt.prefixLines()) {
-      printResponse(sendPacket(buildPacket(seq++, FISCAL_RECEIPT_PRINT_TEXT, params(prefix))));
+      channel.sendPacket(buildPacket(seq++, FISCAL_RECEIPT_PRINT_TEXT, params(prefix)));
     }
 
-    printResponse(sendPacket(buildPacket(seq++, FISCAL_RECEIPT_PRINT_TEXT, params(""))));
+    channel.sendPacket(buildPacket(seq++, FISCAL_RECEIPT_PRINT_TEXT, params("")));
 
     double sum = 0;
     for (ReceiptItem item : receipt.getReceiptItems()) {
       String priceValue = String.format("%.2f", item.getPrice());
       String quantityValue = String.format("%.3f", item.getQuantity());
-      printResponse(sendPacket(buildPacket(seq++, FISCAL_RECEIPT_PAYMENT, params(item.getName(), "1", priceValue, quantityValue, "0", "", "0"))));
+      channel.sendPacket(buildPacket(seq++, FISCAL_RECEIPT_PAYMENT, params(item.getName(), "1", priceValue, quantityValue, "0", "", "0")));
       sum += item.getPrice() * item.getQuantity();
     }
 
-    printResponse(sendPacket(buildPacket(seq++, FISCAL_RECEIPT_PRINT_TEXT, params(""))));
+    channel.sendPacket(buildPacket(seq++, FISCAL_RECEIPT_PRINT_TEXT, params("")));
 
     for (String suffix : receipt.suffixLines()) {
-      printResponse(sendPacket(buildPacket(seq++, FISCAL_RECEIPT_PRINT_TEXT, params(suffix))));
+      channel.sendPacket(buildPacket(seq++, FISCAL_RECEIPT_PRINT_TEXT, params(suffix)));
     }
 
-    printResponse(sendPacket(buildPacket(seq, FISCAL_RECEIPT_TOTAL, params("0", String.format("%.2f", sum)))));
-    printResponse(sendPacket(buildPacket(seq, FISCAL_RECEIPT_CLOSE, "")));
+    closeFiscalReceipt(seq, sum, channel);
+
+    return new PrintReceiptResponse(channel.warnings());
   }
+
 
   @Override
   public void close() throws IOException {
@@ -202,10 +214,11 @@ public class FP705Printer implements ReceiptPrinter {
    * @throws IOException           is thrown in case of communication error with the cash register
    * @throws IllegalStateException is thrown in case when
    */
-  public Set<String> getStatus() throws IOException {
+  public Set<Status> getStatus() throws IOException {
     Response response = sendPacket(buildPacket(SEQ_START, READ_STATUS_CMD, ""));
     return decodeStatus(response.status());
   }
+
 
   /**
    * Gets current time of the fiscal device.
@@ -231,7 +244,7 @@ public class FP705Printer implements ReceiptPrinter {
       System.out.printf("0x%02X ", b);
     }
     System.out.println();
-    
+
     System.out.println("Status: " + decodeStatus(response.status()));
   }
 
@@ -281,7 +294,7 @@ public class FP705Printer implements ReceiptPrinter {
     for (byte b : request) {
       System.out.printf("0x%02X, ", b);
     }
-    
+
     sink.write(request);
     sink.flush();
 
@@ -369,18 +382,36 @@ public class FP705Printer implements ReceiptPrinter {
     return params.toString();
   }
 
-  private Set<String> decodeStatus(byte[] status) {
+  private Set<Status> decodeStatus(byte[] status) {
 
-    Set<String> result = Sets.newLinkedHashSet();
+    Set<Status> result = Sets.newLinkedHashSet();
 
     for (Status each : Status.values()) {
       if (each.isSetIn(status)) {
 
-        result.add(each.name());
+        result.add(each);
       }
     }
 
     return result;
   }
 
+  private void checkStatusForOpenReceiptsAndCloseThem(byte seq, WarningChannel channel) throws IOException {
+    Set<Status> initStatus = getStatus();
+    if (initStatus.contains(FISCAL_RECEIPT_IS_OPEN)) {
+      closeFiscalReceipt(seq, 0f, channel);
+    }
+    if (initStatus.contains(NON_FISCAL_RECEIPT_IS_OPEN)) {
+      closeNonFiscalReceipt(seq, channel);
+    }
+  }
+
+  private void closeFiscalReceipt(byte seq, double sum, WarningChannel channel) throws IOException {
+    channel.sendPacket(buildPacket(seq, FISCAL_RECEIPT_TOTAL, params("0", String.format("%.2f", sum))));
+    channel.sendPacket(buildPacket(seq, FISCAL_RECEIPT_CLOSE, ""));
+  }
+
+  private void closeNonFiscalReceipt(byte seq, WarningChannel channel) throws IOException {
+    channel.sendPacket(buildPacket(seq, TEXT_RECEIPT_CLOSE, ""));
+  }
 }

@@ -59,7 +59,11 @@ paths:
       description: Prining receipts and fiscal receipts
       responses:
         200:
-          description: OK
+          description: Array of warnings
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/PrintReceiptResponse'
         400:
           description: Device not found
           schema:

@@ -45,7 +45,7 @@ public enum Status {
     return warning;
   }
 
-  boolean isSetIn(byte[] status) {
+  public boolean isSetIn(byte[] status) {
     byte statusx = status[statusByte];
     return (statusx & (1 << bit)) != 0;
   }

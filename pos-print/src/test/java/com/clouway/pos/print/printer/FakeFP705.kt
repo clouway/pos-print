@@ -42,7 +42,7 @@ class FakeFP705 : AbstractExecutionThreadService() {
                         output.write(0x15)
                         c.close()
                         throw RuntimeException(
-                                "\n" +
+                                "Flow: " + count + "\n" +
                                         "expected request: " + f.request.toHexString() + "\n," +
                                         "            got: " + requestedBytes.toHexString()
                         )
