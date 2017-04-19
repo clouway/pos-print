@@ -205,8 +205,10 @@ definitions:
         example: "1"
       registerState:
         type: string
-        description: the state which the chash register is going to acquire
-        example: CLEAR or KEEP
+        description: The state which the chash register is going to acquire
+        enum:
+          - KEEP
+          - CLEAR
   PeriodReportRequest:
     type: object
     properties:
@@ -214,16 +216,22 @@ definitions:
         type: string
         format: date-time
         description: The starting date for the report
-        example: 2017-04-23T18:25:43.511Z
+        example: 2017-04-23T18:25:43
       to:
         type: string
         format: date-time
         description: The ending date for the report
-        example: 2017-04-23T18:25:43.511Z
+        example: 2017-04-23T18:25:43
       sourceIp:
         type: string
         description: Unique ip representing the owner of the device.
         example: 89.100.10.5
+      periodType:
+        type: string
+        description: The type for the period report
+        enum:
+          - SHORT
+          - EXTENDED
   Error:
     type: object
     properties:

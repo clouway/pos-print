@@ -5,6 +5,7 @@ import com.clouway.pos.print.core.Receipt;
 import com.clouway.pos.print.core.ReceiptItem;
 import com.clouway.pos.print.core.ReceiptPrinter;
 import com.clouway.pos.print.core.RegisterState;
+import com.clouway.pos.print.core.PeriodType;
 import com.clouway.pos.print.core.RequestTimeoutException;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Bytes;
@@ -18,7 +19,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.SocketTimeoutException;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Set;
 
@@ -102,9 +103,8 @@ public class FP705Printer implements ReceiptPrinter {
     printResponse(sendPacket(buildPacket(seq, TEXT_RECEIPT_CLOSE, "")));
   }
 
-
-  public void reportForPeriod(LocalDate start, LocalDate end) throws IOException {
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yy");
+  public void reportForPeriod(LocalDateTime start, LocalDateTime end, PeriodType periodType) throws IOException {
+    DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
     
     // Command: 94 (5Еh) – fiscal memory report by date
     // Parameters of the command: {Type}<SEP>{Start}<SEP>{End}<SEP> Mandatory parameters:
@@ -113,6 +113,10 @@ public class FP705Printer implements ReceiptPrinter {
     //    • End – End date. Default: Current date ( format DD–MM–YY ); Answer: {ErrorCode}<SEP>
     //    • ErrorCode – Indicates an error code. If command passed, ErrorCode is 0;
     String type = "0";
+    if (periodType == PeriodType.EXTENDED) {
+      type = "1";
+    }
+
     String from = start.format(formatter);
     String to = end.format(formatter);
     String data = params(type, from, to);
@@ -131,7 +135,7 @@ public class FP705Printer implements ReceiptPrinter {
    * state after the operation.
    *
    * @param operatorId the id of the operator for which report need to be issued
-   * @param state      the prefferred state after operation completes
+   * @param state      the preferred state after operation completes
    * @throws IOException is thrown in case of IO error
    */
   public void reportForOperator(String operatorId, RegisterState state) throws IOException {

@@ -1,7 +1,7 @@
 package com.clouway.pos.print.core;
 
 import java.io.IOException;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * @author Miroslav Genov (miroslav.genov@clouway.com)
@@ -40,9 +40,10 @@ public interface ReceiptPrinter {
    *
    * @param start the starting date for the report
    * @param end   the ending date for the report
+   * @param periodType the type of period - SHORT or EXTENDED
    * @throws IOException is thrown in case of IO error
    */
-  void reportForPeriod(LocalDate start, LocalDate end) throws IOException;
+  void reportForPeriod(LocalDateTime start, LocalDateTime end, PeriodType periodType) throws IOException;
 
   /**
    * Closes communication with the printer

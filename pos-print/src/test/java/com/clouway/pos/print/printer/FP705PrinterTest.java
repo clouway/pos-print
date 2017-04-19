@@ -2,6 +2,7 @@ package com.clouway.pos.print.printer;
 
 
 import com.clouway.pos.print.core.RegisterState;
+import com.clouway.pos.print.core.PeriodType;
 import com.clouway.pos.print.printer.FakeFP705.Flow;
 import org.junit.After;
 import org.junit.Before;
@@ -10,7 +11,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collections;
 
 import static com.clouway.pos.print.core.Receipt.newReceipt;
@@ -310,7 +311,7 @@ public class FP705PrinterTest {
                             0x32, 0x35, 0x03},
                     new byte[]{0x16} //response is not relative
             ));
-    printer().reportForPeriod(LocalDate.of(2017, 4, 1), LocalDate.of(2017, 4, 13));
+    printer().reportForPeriod(LocalDateTime.of(2017, 4, 13, 14, 44, 22, 556), LocalDateTime.of(2017, 4, 13, 14, 44, 22, 556), PeriodType.SHORT);
   }
 
   @Test
