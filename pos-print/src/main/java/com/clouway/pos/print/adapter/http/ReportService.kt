@@ -19,7 +19,7 @@ import java.time.format.DateTimeFormatter
  *@author Borislav Gadjev <borislav.gadjev@clouway.com>
  */
 @Service
-@At("/v1/report")
+@At("/v1/reports")
 class ReportService(private var factory: PrinterFactory) {
 
   @Post
