@@ -11,6 +11,12 @@ gradle clean shadowJar
 will create build/libs/pos-print-all.jar which could be distributed 
 and runned on any machine.
 
+### Using from Docker
+
+```sh
+docker run -it clouway/posprint:1.0 --dbHost localhost:27017 --dbName posprint
+```
+
 ### Receipt Sample 
 
 The current design requires the following JSON messages to be used for printing 
