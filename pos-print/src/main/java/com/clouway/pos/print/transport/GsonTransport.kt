@@ -31,12 +31,12 @@ constructor() : Transport {
 
     override fun read(reader: JsonReader): LocalDateTime? {
       if (reader.peek() == JsonToken.NULL) {
-        reader.nextNull();
-        return null;
+        reader.nextNull()
+        return null
       }
 
       val value = reader.nextString()
-      return LocalDateTime.from(DateTimeFormatter.ISO_LOCAL_DATE_TIME.parse(value));
+      return LocalDateTime.from(DateTimeFormatter.ISO_LOCAL_DATE_TIME.parse(value))
     }
 
   }

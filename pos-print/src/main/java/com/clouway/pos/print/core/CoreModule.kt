@@ -1,6 +1,5 @@
 package com.clouway.pos.print.core
 
-import com.clouway.pos.print.printer.FP705Printer
 import com.clouway.pos.print.printer.FP705PrinterFactory
 import com.google.inject.AbstractModule
 

@@ -13,7 +13,7 @@ import org.jmock.integration.junit4.JUnitRuleMockery
 import org.junit.Rule
 import org.junit.Test
 import java.io.IOException
-import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 /**
@@ -85,13 +85,13 @@ class ReportServiceTest {
 
   @Test
   fun printReportForPeriod() {
-    val periodReportDTO = ReportService.PeriodReportDTO("2017-04-23T18:25:43.511Z", "2017-04-23T18:25:43.511Z", "::any ip::")
+    val periodReportDTO = ReportService.PeriodReportDTO(LocalDateTime.parse("2017-04-23T18:25:43", DateTimeFormatter.ISO_LOCAL_DATE_TIME), LocalDateTime.parse("2017-04-23T18:25:43", DateTimeFormatter.ISO_LOCAL_DATE_TIME), "::any ip::", "SHORT")
 
     context.checking(object : Expectations() {
       init {
         oneOf(factory).getPrinter("::any ip::")
         will(AbstractExpectations.returnValue(printer))
-        oneOf(printer).reportForPeriod(LocalDate.parse("2017-04-23T18:25:43.511Z", DateTimeFormatter.ISO_DATE_TIME), LocalDate.parse("2017-04-23T18:25:43.511Z", DateTimeFormatter.ISO_DATE_TIME))
+        oneOf(printer).reportForPeriod(LocalDateTime.parse("2017-04-23T18:25:43", DateTimeFormatter.ISO_LOCAL_DATE_TIME), LocalDateTime.parse("2017-04-23T18:25:43", DateTimeFormatter.ISO_LOCAL_DATE_TIME), PeriodType.SHORT)
         oneOf(printer).close()
       }
     })
@@ -104,7 +104,7 @@ class ReportServiceTest {
 
   @Test
   fun missingCashRegisterForPeriodReport() {
-    val periodReportDTO = ReportService.PeriodReportDTO("2017-04-23T18:25:43.511Z", "2017-04-23T18:25:43.511Z", "::any ip::")
+    val periodReportDTO = ReportService.PeriodReportDTO(LocalDateTime.parse("2017-04-23T18:25:43", DateTimeFormatter.ISO_LOCAL_DATE_TIME), LocalDateTime.parse("2017-04-23T18:25:43", DateTimeFormatter.ISO_LOCAL_DATE_TIME), "::any ip::", "EXTENDED")
 
     context.checking(object : Expectations() {
       init {
@@ -121,7 +121,7 @@ class ReportServiceTest {
 
   @Test
   fun connectionFailureForPeriodReport() {
-    val periodReportDTO = ReportService.PeriodReportDTO("2017-04-23T18:25:43.511Z", "2017-04-23T18:25:43.511Z", "::any ip::")
+    val periodReportDTO = ReportService.PeriodReportDTO(LocalDateTime.parse("2017-04-23T18:25:43", DateTimeFormatter.ISO_LOCAL_DATE_TIME), LocalDateTime.parse("2017-04-23T18:25:43", DateTimeFormatter.ISO_LOCAL_DATE_TIME), "::any ip::", "EXTENDED")
 
     context.checking(object : Expectations() {
       init {
