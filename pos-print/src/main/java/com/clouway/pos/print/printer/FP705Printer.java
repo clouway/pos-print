@@ -105,7 +105,13 @@ public class FP705Printer implements ReceiptPrinter {
 
   public void reportForPeriod(LocalDate start, LocalDate end) throws IOException {
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yy");
-
+    
+    // Command: 94 (5Еh) – fiscal memory report by date
+    // Parameters of the command: {Type}<SEP>{Start}<SEP>{End}<SEP> Mandatory parameters:
+    //    • Type – 0 – short; 1 – detailed; Optional parameters:
+    //    • Start – Start date. Default: Date of fiscalization ( format DD–MM–YY );
+    //    • End – End date. Default: Current date ( format DD–MM–YY ); Answer: {ErrorCode}<SEP>
+    //    • ErrorCode – Indicates an error code. If command passed, ErrorCode is 0;
     String type = "0";
     String from = start.format(formatter);
     String to = end.format(formatter);
