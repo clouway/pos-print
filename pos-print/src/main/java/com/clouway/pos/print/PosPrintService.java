@@ -3,7 +3,7 @@ package com.clouway.pos.print;
 import com.clouway.pos.print.adapter.http.HttpBackend;
 import com.clouway.pos.print.adapter.http.HttpModule;
 import com.clouway.pos.print.core.CoreModule;
-import com.clouway.pos.print.persistent.PersistentModule;
+import com.clouway.pos.print.adapter.db.PersistentModule;
 import com.google.common.collect.Lists;
 import com.google.inject.Guice;
 import com.google.inject.Injector;

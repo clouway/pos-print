@@ -3,7 +3,7 @@ package com.clouway.pos.print.printer
 import com.clouway.pos.print.core.CashRegister
 import com.clouway.pos.print.core.DeviceNotFoundException
 import com.clouway.pos.print.core.ReceiptPrinter
-import com.clouway.pos.print.persistent.CashRegisterRepository
+import com.clouway.pos.print.adapter.db.CashRegisterRepository
 import org.hamcrest.CoreMatchers.instanceOf
 import org.hamcrest.MatcherAssert.assertThat
 import org.jmock.Expectations

@@ -1,19 +1,23 @@
 package com.clouway.pos.print.printer;
 
 
-import com.clouway.pos.print.core.*;
+import com.clouway.pos.print.core.IOChannel;
+import com.clouway.pos.print.core.PeriodType;
+import com.clouway.pos.print.core.PrintReceiptResponse;
+import com.clouway.pos.print.core.Receipt;
+import com.clouway.pos.print.core.ReceiptItem;
+import com.clouway.pos.print.core.ReceiptPrinter;
+import com.clouway.pos.print.core.RegisterState;
+import com.clouway.pos.print.core.RequestTimeoutException;
+import com.clouway.pos.print.core.WarningChannel;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Bytes;
-import okio.Buffer;
-import okio.BufferedSink;
-import okio.BufferedSource;
-import okio.Okio;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.SocketTimeoutException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
@@ -60,13 +64,8 @@ public class FP705Printer implements ReceiptPrinter {
   private static final byte TEXT_RECEIPT_CLOSE = (byte) 0x27;
   private static final byte TEXT_RECEIPT_PRINT_TEXT = (byte) 0x2A;
 
-  private static final byte SYN = 0x16;
-
   private InputStream inputStream;
   private OutputStream outputStream;
-
-  public FP705Printer() {
-  }
 
   public FP705Printer(InputStream inputStream, OutputStream outputStream) {
     this.inputStream = inputStream;
@@ -75,12 +74,11 @@ public class FP705Printer implements ReceiptPrinter {
 
   @Override
   public PrintReceiptResponse printReceipt(Receipt receipt) throws IOException {
-    IOChannel ioChannel = new IOChannel(inputStream, outputStream);
-    WarningChannel channel = new WarningChannel(ioChannel, new HashSet<Status>());
+    WarningChannel channel = createChannel(5);
 
     byte seq = SEQ_START;
 
-    checkStatusForOpenReceiptsAndCloseThem(seq, channel);
+    finalizeNotCompletedOperations(seq, channel);
 
     channel.sendPacket(buildPacket(seq++, TEXT_RECEIPT_OPEN, ""));
 
@@ -88,16 +86,10 @@ public class FP705Printer implements ReceiptPrinter {
       channel.sendPacket(buildPacket(seq++, TEXT_RECEIPT_PRINT_TEXT, params(prefix)));
     }
 
-    channel.sendPacket(buildPacket(seq++, TEXT_RECEIPT_PRINT_TEXT, params("")));
-    channel.sendPacket(buildPacket(seq++, TEXT_RECEIPT_PRINT_TEXT, params("")));
-
     for (ReceiptItem item : receipt.getReceiptItems()) {
       String formattedRow = String.format("%s - %.2f X %.2f %s", item.getName(), item.getQuantity(), item.getPrice(), receipt.getCurrency());
       channel.sendPacket(buildPacket(seq++, TEXT_RECEIPT_PRINT_TEXT, params(formattedRow)));
     }
-
-    channel.sendPacket(buildPacket(seq++, TEXT_RECEIPT_PRINT_TEXT, params("")));
-    channel.sendPacket(buildPacket(seq++, TEXT_RECEIPT_PRINT_TEXT, params("")));
 
     for (String suffix : receipt.suffixLines()) {
       channel.sendPacket(buildPacket(seq++, TEXT_RECEIPT_PRINT_TEXT, params(suffix)));
@@ -109,6 +101,7 @@ public class FP705Printer implements ReceiptPrinter {
   }
 
   public void reportForPeriod(LocalDateTime start, LocalDateTime end, PeriodType periodType) throws IOException {
+
     DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
 
     // Command: 94 (5Еh) – fiscal memory report by date
@@ -126,9 +119,9 @@ public class FP705Printer implements ReceiptPrinter {
     String to = end.format(formatter);
     String data = params(type, from, to);
 
-    final int retryAttempts = 3;
+    WarningChannel channel = createChannel(3);
     try {
-      Response response = sendPacket(buildPacket(SEQ_START, FISCAL_MEMORY_REPORT_BY_DATE, data), retryAttempts);
+      Response response = channel.sendPacket(buildPacket(SEQ_START, FISCAL_MEMORY_REPORT_BY_DATE, data));
       printResponse(response);
     } catch (RequestTimeoutException e) {
       // nop as  this operation is no returning anything
@@ -157,8 +150,8 @@ public class FP705Printer implements ReceiptPrinter {
     final int retryAttempts = 3;
 
     try {
-
-      sendPacket(buildPacket(SEQ_START, REPORT_OPERATORS, params(operatorId, operatorId, clearRegister)), retryAttempts);
+      WarningChannel channel = createChannel(retryAttempts);
+      channel.sendPacket(buildPacket(SEQ_START, REPORT_OPERATORS, params(operatorId, operatorId, clearRegister)));
     } catch (RequestTimeoutException e) {
       // nop as  this operation is no returning anything
     }
@@ -167,20 +160,17 @@ public class FP705Printer implements ReceiptPrinter {
 
   @Override
   public PrintReceiptResponse printFiscalReceipt(Receipt receipt) throws IOException {
-    IOChannel ioChannel = new IOChannel(inputStream, outputStream);
-    WarningChannel channel = new WarningChannel(ioChannel, new HashSet<Status>());
+    WarningChannel channel = createChannel(5);
 
     byte seq = SEQ_START;
 
-    checkStatusForOpenReceiptsAndCloseThem(seq, channel);
+    finalizeNotCompletedOperations(seq, channel);
 
     channel.sendPacket(buildPacket(seq++, FISCAL_RECEIPT_OPEN, params("1", "0000", "1", "")));
 
     for (String prefix : receipt.prefixLines()) {
       channel.sendPacket(buildPacket(seq++, FISCAL_RECEIPT_PRINT_TEXT, params(prefix)));
     }
-
-    channel.sendPacket(buildPacket(seq++, FISCAL_RECEIPT_PRINT_TEXT, params("")));
 
     double sum = 0;
     for (ReceiptItem item : receipt.getReceiptItems()) {
@@ -189,9 +179,7 @@ public class FP705Printer implements ReceiptPrinter {
       channel.sendPacket(buildPacket(seq++, FISCAL_RECEIPT_PAYMENT, params(item.getName(), "1", priceValue, quantityValue, "0", "", "0")));
       sum += item.getPrice() * item.getQuantity();
     }
-
-    channel.sendPacket(buildPacket(seq++, FISCAL_RECEIPT_PRINT_TEXT, params("")));
-
+    
     for (String suffix : receipt.suffixLines()) {
       channel.sendPacket(buildPacket(seq++, FISCAL_RECEIPT_PRINT_TEXT, params(suffix)));
     }
@@ -200,7 +188,6 @@ public class FP705Printer implements ReceiptPrinter {
 
     return new PrintReceiptResponse(channel.warnings());
   }
-
 
   @Override
   public void close() throws IOException {
@@ -215,7 +202,8 @@ public class FP705Printer implements ReceiptPrinter {
    * @throws IllegalStateException is thrown in case when
    */
   public Set<Status> getStatus() throws IOException {
-    Response response = sendPacket(buildPacket(SEQ_START, READ_STATUS_CMD, ""));
+    WarningChannel channel = createChannel(5);
+    Response response = channel.sendPacket(buildPacket(SEQ_START, READ_STATUS_CMD, ""));
     return decodeStatus(response.status());
   }
 
@@ -228,7 +216,8 @@ public class FP705Printer implements ReceiptPrinter {
    * @throws IllegalStateException is thrown if
    */
   public String getTime() throws IOException {
-    Response response = sendPacket(buildPacket(SEQ_START, READ_DATE_TIME, ""));
+    WarningChannel channel = createChannel(2);
+    Response response = channel.sendPacket(buildPacket(SEQ_START, READ_DATE_TIME, ""));
     printResponse(response);
     return new String(response.data());
   }
@@ -279,58 +268,6 @@ public class FP705Printer implements ReceiptPrinter {
     byte[] suffix = Bytes.concat(new byte[]{postamble}, calcBCC(dataBytes, seq, cmd), new byte[]{terminator});
 
     return Bytes.concat(prefix, dataBytes, suffix);
-  }
-
-  private Response sendPacket(byte[] request) throws IOException {
-    final int maxRetries = 10;
-    return sendPacket(request, maxRetries);
-  }
-
-  private Response sendPacket(byte[] request, int maxRetries) throws IOException {
-    BufferedSink sink = Okio.buffer(Okio.sink(outputStream));
-
-    System.out.println("========================");
-    System.out.print("Request: ");
-    for (byte b : request) {
-      System.out.printf("0x%02X, ", b);
-    }
-
-    sink.write(request);
-    sink.flush();
-
-    BufferedSource source = Okio.buffer(Okio.source(inputStream));
-
-    Buffer buffer = new Buffer();
-    for (int retry = 0; retry < maxRetries; retry++) {
-      try {
-        source.read(buffer, 2048);
-
-        if (buffer.indexOf(SYN) > 0) {
-          System.out.println("Got Sync");
-        }
-
-        long from = buffer.indexOf((byte) 0x01);
-        long to = buffer.indexOf((byte) 0x03);
-
-        if (from >= 0 & to > 0) {
-          buffer.skip(from);
-          byte[] content = buffer.readByteArray(to - from + 1);
-
-          return new FP705Response(content);
-        }
-
-        Thread.sleep(200);
-
-      } catch (InterruptedException | SocketTimeoutException e) {
-        try {
-          Thread.sleep(5000);
-        } catch (InterruptedException e1) {
-          e1.printStackTrace();
-        }
-      }
-    }
-
-    throw new RequestTimeoutException(String.format("unable to get response after %d retries", maxRetries));
   }
 
   private byte[] calcBCC(byte[] data, byte seq, byte cmd) {
@@ -396,7 +333,12 @@ public class FP705Printer implements ReceiptPrinter {
     return result;
   }
 
-  private void checkStatusForOpenReceiptsAndCloseThem(byte seq, WarningChannel channel) throws IOException {
+  @NotNull
+  private WarningChannel createChannel(int maxRetries) {
+    return new WarningChannel(new IOChannel(inputStream, outputStream, maxRetries), new HashSet<>());
+  }
+
+  private void finalizeNotCompletedOperations(byte seq, WarningChannel channel) throws IOException {
     Set<Status> initStatus = getStatus();
     if (initStatus.contains(FISCAL_RECEIPT_IS_OPEN)) {
       closeFiscalReceipt(seq, 0f, channel);

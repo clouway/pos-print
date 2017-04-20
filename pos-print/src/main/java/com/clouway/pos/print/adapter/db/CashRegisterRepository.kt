@@ -1,4 +1,4 @@
-package com.clouway.pos.print.persistent
+package com.clouway.pos.print.adapter.db
 
 import com.clouway.pos.print.core.CashRegister
 import java.util.*

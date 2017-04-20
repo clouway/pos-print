@@ -1,9 +1,9 @@
 package com.clouway.pos.print.adapter.http
 
+import com.clouway.pos.print.adapter.db.CashRegisterRepository
+import com.clouway.pos.print.adapter.db.DeviceAlreadyExistException
 import com.clouway.pos.print.core.CashRegister
 import com.clouway.pos.print.core.ErrorResponse
-import com.clouway.pos.print.persistent.CashRegisterRepository
-import com.clouway.pos.print.persistent.DeviceAlreadyExistException
 import com.clouway.pos.print.transport.GsonTransport
 import com.google.common.collect.Lists
 import com.google.inject.Inject
