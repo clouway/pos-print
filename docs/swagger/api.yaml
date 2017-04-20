@@ -125,7 +125,7 @@ definitions:
         type: string
         description: Unique ip representing the endpoint of the device.
         example: '10.10.5.7'
-      desciption:
+      description:
         type: string
         description: Description for the device.
         example: 'Cash register one'
