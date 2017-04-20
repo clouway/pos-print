@@ -1,17 +1,50 @@
 package com.clouway.pos.print.transport
 
 import com.google.common.io.ByteStreams
-import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.TypeAdapter
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonToken
+import com.google.gson.stream.JsonWriter
 import com.google.inject.Inject
 import com.google.inject.TypeLiteral
 import com.google.sitebricks.client.Transport
 import java.io.*
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 /**
  * @author Martin Milev <martin.milev@clouway.com>
  */
 class GsonTransport @Inject
-constructor(private val gson: Gson) : Transport {
+constructor() : Transport {
+
+  class LocalDateTimeTypeAdapter : TypeAdapter<LocalDateTime>() {
+
+    override fun write(out: JsonWriter, value: LocalDateTime?) {
+      if (value == null) {
+        out.nullValue()
+        return
+      }
+      out.value(value.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+    }
+
+    override fun read(reader: JsonReader): LocalDateTime? {
+      if (reader.peek() == JsonToken.NULL) {
+        reader.nextNull();
+        return null;
+      }
+
+      val value = reader.nextString()
+      return LocalDateTime.from(DateTimeFormatter.ISO_LOCAL_DATE_TIME.parse(value));
+    }
+
+  }
+
+  internal val gson = GsonBuilder()
+    .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeTypeAdapter())
+    .create()
+  
 
   @Throws(IOException::class)
   override fun <T> `in`(input: InputStream, tClass: Class<T>): T {
