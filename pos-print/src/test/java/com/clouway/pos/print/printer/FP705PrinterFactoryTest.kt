@@ -26,7 +26,7 @@ class FP705PrinterFactoryTest {
 
   @Test
   fun happyPath() {
-    val register = CashRegister("::ip::", "127.0.0.1:" + fakeFP705.port(), "::any description::")
+    val register = CashRegister("1", "::ip::", "127.0.0.1:" + fakeFP705.port(), "::any description::")
     fakeFP705.startAsync().awaitRunning()
 
     context.checking(object : Expectations() {

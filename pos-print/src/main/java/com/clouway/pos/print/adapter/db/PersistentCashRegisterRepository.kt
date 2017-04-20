@@ -6,7 +6,9 @@ import com.google.inject.Inject
 import com.google.inject.Provider
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
+import com.mongodb.client.model.UpdateOptions
 import org.bson.Document
+import org.bson.types.ObjectId
 import java.util.*
 
 /**
@@ -21,9 +23,9 @@ class PersistentCashRegisterRepository @Inject constructor(private val database:
     }
 
     val query = adapt(record)
-    devices().insertOne(query)
+    val registrationResult = devices().updateOne(Document("sourceIp", record.sourceIp), Document("\$set", query), UpdateOptions().upsert(true))
 
-    return record.destination
+    return registrationResult.upsertedId.asObjectId().value.toHexString()
   }
 
   override fun getAll(): List<CashRegister> {
@@ -47,8 +49,15 @@ class PersistentCashRegisterRepository @Inject constructor(private val database:
     return Optional.of(adapt(result.first()))
   }
 
+  override fun delete(id: String): String {
+    devices().findOneAndDelete(Document().append("_id", ObjectId(id))) ?: throw DeviceDoesNotExistException()
+
+    return id
+  }
+
   private fun adapt(record: Document): CashRegister {
     return CashRegister(
+      record.getObjectId("_id").toHexString(),
       record.getString("sourceIp"),
       record.getString("destination"),
       record.getString("description")
