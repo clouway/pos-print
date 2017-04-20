@@ -36,13 +36,35 @@ paths:
         - Registers
       responses:
         201:
-          description: The destination of the registered device
+          description: The id of the registered device
           schema:
             type: object
             items:
               $ref: '#/definitions/DeviceRegistrationResponse'
         400:
           description: Device already exists
+          schema:
+            $ref: '#/definitions/Error'
+    delete:
+      summary: Deletes registered device
+      parameters:
+        - in: body
+          name: request
+          description: Deletes a single cash register device
+          required: true
+          schema:
+            $ref: '#/definitions/DeviceDeletionRequest'
+      tags:
+        - Deletes
+      responses:
+        204:
+          description: The id of the deleted device
+          schema:
+            type: object
+            items:
+              $ref: '#/definitions/DeviceDeletionResponse'
+        400:
+          description: Not present
           schema:
             $ref: '#/definitions/Error'
 
@@ -236,6 +258,20 @@ definitions:
         enum:
           - SHORT
           - EXTENDED
+  DeviceDeletionRequest:
+    type: object
+    properties:
+      sourceIp:
+        type: string
+        description: Unique id corresponding to the id of the device to be deleted
+        example: "127.0.0.1"
+  DeviceDeletionResponse:
+    type: object
+    properties:
+      sourceIp:
+        type: string
+        description: Unique id corresponding to the id of the device was deleted
+        example: "127.0.0.1"
   Error:
     type: object
     properties:
