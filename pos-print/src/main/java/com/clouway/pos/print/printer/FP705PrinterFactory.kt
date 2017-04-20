@@ -2,7 +2,7 @@ package com.clouway.pos.print.printer
 
 import com.clouway.pos.print.core.DeviceNotFoundException
 import com.clouway.pos.print.core.PrinterFactory
-import com.clouway.pos.print.persistent.CashRegisterRepository
+import com.clouway.pos.print.adapter.db.CashRegisterRepository
 import com.google.inject.Inject
 import java.net.Socket
 

@@ -24,35 +24,31 @@ class FakeFP705 : AbstractExecutionThreadService() {
     }
 
     override fun run() {
-        while (isRunning()) {
+        while (isRunning) {
             try {
                 val c = s.accept()
                 val b = ByteArray(2048)
 
-                val input = c.getInputStream();
+                val input = c.getInputStream()
                 val output = c.getOutputStream()
-
-                var count = 0
-                for (f in flows) {
+               
+                for ((index, flow) in flows.withIndex()) {
                     val readBytes = input.read(b)
 
                     val requestedBytes = b.sliceArray(IntRange(0, readBytes - 1))
 
-                    if (!requestedBytes.contentEquals(f.request)) {
+                    if (!requestedBytes.contentEquals(flow.request)) {
                         output.write(0x15)
                         c.close()
                         throw RuntimeException(
-                                "Flow: " + count + "\n" +
-                                        "expected request: " + f.request.toHexString() + "\n," +
+                                "Flow: " + index + "\n" +
+                                        "expected request: " + flow.request.toHexString() + "\n," +
                                         "            got: " + requestedBytes.toHexString()
                         )
-                        break
                     } else {
-                        output.write(f.response)
+                        output.write(flow.response)
                         output.flush()
                     }
-
-                    count++;
                 }
 
                 output.flush()

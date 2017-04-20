@@ -1,5 +1,7 @@
 package com.clouway.pos.print.persistent
 
+import com.clouway.pos.print.adapter.db.DeviceAlreadyExistException
+import com.clouway.pos.print.adapter.db.PersistentCashRegisterRepository
 import com.clouway.pos.print.core.CashRegister
 import com.google.common.collect.Lists
 import com.google.inject.util.Providers

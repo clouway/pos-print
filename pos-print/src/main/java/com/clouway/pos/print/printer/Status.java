@@ -4,6 +4,7 @@ package com.clouway.pos.print.printer;
  * @author Miroslav Genov (miroslav.genov@clouway.com)
  */
 public enum Status {
+
   SYNTAX_ERROR(0, 0, false),
   INVALID_COMMAND(0, 1, false),
   BROKEN_PRINTIN_MECHANISM(0, 4, false),
@@ -41,7 +42,7 @@ public enum Status {
     this.warning = warning;
   }
 
-  boolean isForWarning() {
+  public boolean isForWarning() {
     return warning;
   }
 

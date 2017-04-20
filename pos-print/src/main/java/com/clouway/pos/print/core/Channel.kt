@@ -23,8 +23,8 @@ interface Channel {
   fun sendPacket(request: ByteArray): Response
 }
 
-class IOChannel(private var inputStream: InputStream, private var outputStream: OutputStream) : Channel {
-  private val maxRetries: Int = 5
+class IOChannel(val inputStream: InputStream, val outputStream: OutputStream, val maxRetries: Int = 5) : Channel {
+
   override fun sendPacket(request: ByteArray): Response {
     val sink: BufferedSink = Okio.buffer(Okio.sink(outputStream))
 
@@ -71,21 +71,45 @@ class IOChannel(private var inputStream: InputStream, private var outputStream: 
   }
 }
 
+/**
+ * WarningChannel is a channel which collects status of the device after each packet that was send to the origin channel.
+ * <p/>
+ * After all operations are executed, callers are able to use the warnings() func to get all warnings that are happened
+ * during the execution of the operations.
+ * <p/>
+ * This is how code is simplified by using of this class:
+ * <code>
+ *   response = channel.sendPacket(request1)
+ *   statuses = statuses.plus(decode(response.status()))
+ *   ...
+ *   response = channel.sendPacket(request2)
+ *   statuses = statuses.plus(decode(response.status()))
+ * </code>
+ *
+ * vs
+ *
+ * <code>
+ *  channel.sendPacket(request1)
+ *  channel.sendPacket(request2)
+ *   ...
+ *  warnings = channel.warnings()
+ * </code>
+ *
+ *
+ */
 class WarningChannel(private val origin: Channel, private var statuses: Set<Status> = emptySet()) : Channel {
 
   override fun sendPacket(request: ByteArray): Response {
     val response: Response = origin.sendPacket(request)
-    statuses.plus(decodeStatus(response.status()))
+    statuses = statuses.plus(decodeStatus(response.status()))
     return response
   }
 
   fun warnings(): Set<Status> {
-    val warnings = Sets.newLinkedHashSet<Status>()
-    warnings += statuses
-    return warnings
+    return statuses.filter { it.isForWarning }.toSet()
   }
 
-  private fun decodeStatus(status: ByteArray): Set<Status> {
+  internal fun decodeStatus(status: ByteArray): Set<Status> {
     val result = Sets.newLinkedHashSet<Status>()
     Status.values().filterTo(result) { it.isSetIn(status) }
     return result

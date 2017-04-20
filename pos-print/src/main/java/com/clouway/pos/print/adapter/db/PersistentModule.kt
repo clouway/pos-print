@@ -1,4 +1,4 @@
-package com.clouway.pos.print.persistent
+package com.clouway.pos.print.adapter.db
 
 import com.google.inject.AbstractModule
 import com.google.inject.Provides
