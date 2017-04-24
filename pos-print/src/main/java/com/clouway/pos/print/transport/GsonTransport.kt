@@ -26,7 +26,7 @@ constructor() : Transport {
         out.nullValue()
         return
       }
-      out.value(value.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+      out.value(value.format(DateTimeFormatter.ISO_DATE_TIME))
     }
 
     override fun read(reader: JsonReader): LocalDateTime? {
@@ -36,7 +36,7 @@ constructor() : Transport {
       }
 
       val value = reader.nextString()
-      return LocalDateTime.from(DateTimeFormatter.ISO_LOCAL_DATE_TIME.parse(value))
+      return LocalDateTime.from(DateTimeFormatter.ISO_DATE_TIME.parse(value))
     }
 
   }
