@@ -4,7 +4,6 @@ import com.clouway.pos.print.core.*
 import com.clouway.pos.print.transport.GsonTransport
 import com.google.inject.Inject
 import com.google.sitebricks.At
-import com.google.sitebricks.client.transport.Json
 import com.google.sitebricks.headless.Reply
 import com.google.sitebricks.headless.Request
 import com.google.sitebricks.headless.Service
@@ -35,7 +34,7 @@ class ReportService @Inject constructor(private var factory: PrinterFactory) {
     } catch (e: IOException) {
       return Reply.with(ErrorResponse("Device can't connect.")).`as`(GsonTransport::class.java).status(480)
     }
-    return Reply.with("Report completed").`as`(Json::class.java).ok()
+    return Reply.with("Report completed").`as`(GsonTransport::class.java).ok()
   }
 
   @Post
@@ -54,7 +53,7 @@ class ReportService @Inject constructor(private var factory: PrinterFactory) {
     } catch (e: IOException) {
       return Reply.with(ErrorResponse("Device can't connect.")).`as`(GsonTransport::class.java).status(480)
     }
-    return Reply.with("Report completed").`as`(Json::class.java).ok()
+    return Reply.with("Report completed").`as`(GsonTransport::class.java).ok()
   }
 
   private fun adaptToState(state: String): RegisterState {

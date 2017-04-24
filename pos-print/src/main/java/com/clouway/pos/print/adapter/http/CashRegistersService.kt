@@ -2,12 +2,12 @@ package com.clouway.pos.print.adapter.http
 
 import com.clouway.pos.print.core.CashRegister
 import com.clouway.pos.print.core.ErrorResponse
-import com.clouway.pos.print.persistent.DeviceAlreadyExistException
 import com.clouway.pos.print.persistent.CashRegisterRepository
+import com.clouway.pos.print.persistent.DeviceAlreadyExistException
+import com.clouway.pos.print.transport.GsonTransport
 import com.google.common.collect.Lists
 import com.google.inject.Inject
 import com.google.sitebricks.At
-import com.google.sitebricks.client.transport.Json
 import com.google.sitebricks.headless.Reply
 import com.google.sitebricks.headless.Request
 import com.google.sitebricks.headless.Service
@@ -26,12 +26,12 @@ class CashRegistersService @Inject constructor(private var repository: CashRegis
   @Get
   fun getDevices(): Reply<*> {
     val devicesDTO = adapt(repository.getAll())
-    return Reply.with(devicesDTO).`as`(Json::class.java).ok()
+    return Reply.with(devicesDTO).`as`(GsonTransport::class.java).ok()
   }
 
   @Post
   fun registerDevice(request: Request): Reply<*> {
-    val cashRegisterDTO = request.read(CashRegisterDTO::class.java).`as`(Json::class.java)
+    val cashRegisterDTO = request.read(CashRegisterDTO::class.java).`as`(GsonTransport::class.java)
 
     try {
       repository.register(CashRegister(cashRegisterDTO.sourceIp, cashRegisterDTO.destination, cashRegisterDTO.description))

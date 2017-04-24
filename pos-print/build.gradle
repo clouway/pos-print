@@ -83,9 +83,6 @@ dependencies {
   compile 'org.slf4j:slf4j-api:1.6.3'
   compile 'ch.qos.logback:logback-classic:0.9.30'
 
-  compile 'com.fasterxml.jackson.core:jackson-core:2.8.0'
-  compile 'com.fasterxml.jackson.core:jackson-databind:2.8.0'
-
   //MongoDatabase
   compile 'org.mongodb:mongodb-driver:3.4.2'
 
