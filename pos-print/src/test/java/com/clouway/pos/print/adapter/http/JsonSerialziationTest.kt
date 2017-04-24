@@ -53,6 +53,28 @@ class JsonSerialziationTest {
     assertThat(request.time?.dayOfMonth, equalTo(4))
   }
 
+  @Test
+  fun timeZoneIsOmitted() {
+    val transport = GsonTransport();
+    val source = "{\"time\":\"2017-03-04T00:00:00+01:00\"}";
+    val request = transport.`in`(ByteArrayInputStream(source.toByteArray()), TestRequest::class.java)
+
+    assertThat(request.time?.year, equalTo(2017))
+    assertThat(request.time?.monthValue, equalTo(3))
+    assertThat(request.time?.dayOfMonth, equalTo(4))
+  }
+
+  @Test
+  fun timeZoneWithNameIsOmitted() {
+    val transport = GsonTransport();
+    val source = "{\"time\":\"2017-03-04T00:00:00+01:00[Europe/Paris]\"}";
+    val request = transport.`in`(ByteArrayInputStream(source.toByteArray()), TestRequest::class.java)
+
+    assertThat(request.time?.year, equalTo(2017))
+    assertThat(request.time?.monthValue, equalTo(3))
+    assertThat(request.time?.dayOfMonth, equalTo(4))
+  }
+
   @Test(expected = DateTimeParseException::class)
   fun deserializeBadFormattedLocalDateTime() {
     val transport = GsonTransport();
