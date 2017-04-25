@@ -66,6 +66,7 @@ public class FP705Printer implements ReceiptPrinter {
 
   private InputStream inputStream;
   private OutputStream outputStream;
+  private final Integer maxRetries = 50;
 
   public FP705Printer(InputStream inputStream, OutputStream outputStream) {
     this.inputStream = inputStream;
@@ -74,7 +75,7 @@ public class FP705Printer implements ReceiptPrinter {
 
   @Override
   public PrintReceiptResponse printReceipt(Receipt receipt) throws IOException {
-    WarningChannel channel = createChannel(5);
+    WarningChannel channel = createChannel(maxRetries);
 
     byte seq = SEQ_START;
 
@@ -119,7 +120,7 @@ public class FP705Printer implements ReceiptPrinter {
     String to = end.format(formatter);
     String data = params(type, from, to);
 
-    WarningChannel channel = createChannel(3);
+    WarningChannel channel = createChannel(maxRetries);
     try {
       Response response = channel.sendPacket(buildPacket(SEQ_START, FISCAL_MEMORY_REPORT_BY_DATE, data));
       printResponse(response);
@@ -160,7 +161,7 @@ public class FP705Printer implements ReceiptPrinter {
 
   @Override
   public PrintReceiptResponse printFiscalReceipt(Receipt receipt) throws IOException {
-    WarningChannel channel = createChannel(5);
+    WarningChannel channel = createChannel(maxRetries);
 
     byte seq = SEQ_START;
 
@@ -179,7 +180,7 @@ public class FP705Printer implements ReceiptPrinter {
       channel.sendPacket(buildPacket(seq++, FISCAL_RECEIPT_PAYMENT, params(item.getName(), "1", priceValue, quantityValue, "0", "", "0")));
       sum += item.getPrice() * item.getQuantity();
     }
-    
+
     for (String suffix : receipt.suffixLines()) {
       channel.sendPacket(buildPacket(seq++, FISCAL_RECEIPT_PRINT_TEXT, params(suffix)));
     }
@@ -202,7 +203,7 @@ public class FP705Printer implements ReceiptPrinter {
    * @throws IllegalStateException is thrown in case when
    */
   public Set<Status> getStatus() throws IOException {
-    WarningChannel channel = createChannel(5);
+    WarningChannel channel = createChannel(maxRetries);
     Response response = channel.sendPacket(buildPacket(SEQ_START, READ_STATUS_CMD, ""));
     return decodeStatus(response.status());
   }
@@ -216,7 +217,7 @@ public class FP705Printer implements ReceiptPrinter {
    * @throws IllegalStateException is thrown if
    */
   public String getTime() throws IOException {
-    WarningChannel channel = createChannel(2);
+    WarningChannel channel = createChannel(maxRetries);
     Response response = channel.sendPacket(buildPacket(SEQ_START, READ_DATE_TIME, ""));
     printResponse(response);
     return new String(response.data());
@@ -335,16 +336,16 @@ public class FP705Printer implements ReceiptPrinter {
 
   @NotNull
   private WarningChannel createChannel(int maxRetries) {
-    return new WarningChannel(new IOChannel(inputStream, outputStream, maxRetries), new HashSet<>());
+    return new WarningChannel(new IOChannel(inputStream, outputStream,maxRetries), new HashSet<>());
   }
 
   private void finalizeNotCompletedOperations(byte seq, WarningChannel channel) throws IOException {
     Set<Status> initStatus = getStatus();
-    if (initStatus.contains(FISCAL_RECEIPT_IS_OPEN)) {
-      closeFiscalReceipt(seq, 0f, channel);
-    }
     if (initStatus.contains(NON_FISCAL_RECEIPT_IS_OPEN)) {
       closeNonFiscalReceipt(seq, channel);
+    }
+    if (initStatus.contains(FISCAL_RECEIPT_IS_OPEN)) {
+      closeFiscalReceipt(seq, 0f, channel);
     }
   }
 
