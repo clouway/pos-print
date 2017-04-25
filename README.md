@@ -2,6 +2,11 @@
 
 A Service for printing of receipts to cash registers or termo printers.
 
+
+### Build Status
+
+[![Build Status](https://travis-ci.org/clouway/pos-print.svg)](https://travis-ci.org/clouway/pos-print)
+
 ### Build
 
 In pos-print
