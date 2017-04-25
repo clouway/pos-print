@@ -23,7 +23,7 @@ interface Channel {
   fun sendPacket(request: ByteArray): Response
 }
 
-class IOChannel(val inputStream: InputStream, val outputStream: OutputStream, val maxRetries: Int = 5) : Channel {
+class IOChannel(val inputStream: InputStream, val outputStream: OutputStream, val maxRetries: Int) : Channel {
 
   override fun sendPacket(request: ByteArray): Response {
     val sink: BufferedSink = Okio.buffer(Okio.sink(outputStream))
@@ -56,8 +56,7 @@ class IOChannel(val inputStream: InputStream, val outputStream: OutputStream, va
           return FP705Response(content)
         }
 
-        Thread.sleep(200)
-
+        Thread.sleep(60)
       } catch (e: SocketTimeoutException) {
         try {
           Thread.sleep(5000)
@@ -67,7 +66,7 @@ class IOChannel(val inputStream: InputStream, val outputStream: OutputStream, va
       }
     }
 
-    throw RequestTimeoutException(String.format("unable to get response after %d retries", maxRetries))
+    throw RequestTimeoutException(String.format("Unable to get response after %d retries", maxRetries))
   }
 }
 

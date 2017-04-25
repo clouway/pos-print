@@ -87,13 +87,28 @@ paths:
             items:
               $ref: '#/definitions/PrintReceiptResponse'
         400:
+          description:
+            Connection to the device is established,
+            but a problem with the device occured and receipt was not printed.
+            Returns array of warnings
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/PrintError"
+        404:
           description: Device not found
           schema:
-            $ref: "#/definitions/Error"
+            $ref: "#/definitions/DeviceNotFoundError"
         480:
           description: Device can't connect
           schema:
-            $ref: "#/definitions/Error"
+            $ref: "#/definitions/DeviceCantConnectError"
+        504:
+          description:
+            Printer request timeout
+            Problem occured while printing the receipt
+          schema:
+            $ref: "#/definitions/RequestTimeoutError"
 
   /v1/reports/operator/print:
     post:
@@ -111,7 +126,7 @@ paths:
         400:
           description: Device not found
           schema:
-            $ref: "#/definitions/Error"
+            $ref: "#/definitions/DeviceNotFoundError"
         480:
           description: Device can't connect
           schema:
@@ -218,6 +233,15 @@ definitions:
                 format: double
                 description: Price of the item
                 example: 1.0
+  PrintReceiptResponse:
+    type: object
+    properties:
+      warnings:
+        type: array
+        items:
+          type: string
+          description: Name of the warning that the printer returns
+          example: "END_OF_PAPER"
   OperatorReportRequest:
     type: object
     properties:
@@ -282,3 +306,30 @@ definitions:
       message:
         type: string
         example: 'Is already present'
+  PrintError:
+    type: object
+    properties:
+      warnings:
+        type: array
+        items:
+          type: string
+          description: Name of the warning that the printer returns
+          example: "END_OF_PAPER"
+  DeviceNotFoundError:
+    type: object
+    properties:
+      message:
+        type: string
+        example: 'Device not found.'
+  DeviceCantConnectError:
+    type: object
+    properties:
+      message:
+        type: string
+        example: 'Device can’t connect.'
+  RequestTimeoutError:
+    type: object
+    properties:
+      message:
+        type: string
+        example: 'Printer request timeout. Unable to get response after 50 retries'
