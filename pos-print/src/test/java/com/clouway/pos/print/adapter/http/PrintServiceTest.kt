@@ -4,7 +4,8 @@ import com.clouway.pos.print.ReplyMatchers.Companion.contains
 import com.clouway.pos.print.ReplyMatchers.Companion.isNotFound
 import com.clouway.pos.print.ReplyMatchers.Companion.isOk
 import com.clouway.pos.print.ReplyMatchers.Companion.isStatus
-import com.clouway.pos.print.SiteBricksRequestMockery
+import com.clouway.pos.print.FakeRequest
+import com.clouway.pos.print.FakeRequest.Factory.newRequest
 import com.clouway.pos.print.core.*
 import com.clouway.pos.print.printer.Status
 import org.hamcrest.MatcherAssert.assertThat
@@ -26,7 +27,6 @@ class PrintServiceTest {
   private val factory = context.mock(PrinterFactory::class.java)
   private val printer = context.mock(ReceiptPrinter::class.java)
 
-  private val request = SiteBricksRequestMockery()
   private val service = PrintService(factory)
 
   @Test
@@ -46,7 +46,7 @@ class PrintServiceTest {
       }
     })
 
-    val reply = service.printReceipt(request.mockRequest(receiptDto))
+    val reply = service.printReceipt(newRequest(receiptDto))
     assertThat(reply, isOk)
     assertThat(reply, contains(dto))
   }
@@ -68,7 +68,7 @@ class PrintServiceTest {
       }
     })
 
-    val reply = service.printReceipt(request.mockRequest(receiptDto))
+    val reply = service.printReceipt(newRequest(receiptDto))
     assertThat(reply, isOk)
     assertThat(reply, contains(dto))
   }
@@ -90,7 +90,7 @@ class PrintServiceTest {
       }
     })
 
-    val reply = service.printReceipt(request.mockRequest(receiptDto))
+    val reply = service.printReceipt(newRequest(receiptDto))
     assertThat(reply, isStatus(400))
     assertThat(reply, contains(dto))
   }
@@ -112,7 +112,7 @@ class PrintServiceTest {
       }
     })
 
-    val reply = service.printReceipt(request.mockRequest(receiptDto))
+    val reply = service.printReceipt(newRequest(receiptDto))
     assertThat(reply, isStatus(400))
     assertThat(reply, contains(dto))
   }
@@ -128,7 +128,7 @@ class PrintServiceTest {
       }
     })
 
-    val reply = service.printReceipt(request.mockRequest(receiptDto))
+    val reply = service.printReceipt(newRequest(receiptDto))
     assertThat(reply, isNotFound)
     assertThat(reply, contains(ErrorResponse("Device not found.")))
   }
@@ -144,7 +144,7 @@ class PrintServiceTest {
       }
     })
 
-    val reply = service.printReceipt(request.mockRequest(receiptDto))
+    val reply = service.printReceipt(newRequest(receiptDto))
     assertThat(reply, isStatus(480))
     assertThat(reply, contains(ErrorResponse("Device can't connect.")))
   }
@@ -164,7 +164,7 @@ class PrintServiceTest {
       }
     })
 
-    val reply = service.printReceipt(request.mockRequest(receiptDto))
+    val reply = service.printReceipt(newRequest(receiptDto))
     assertThat(reply, isStatus(504))
   }
 }
