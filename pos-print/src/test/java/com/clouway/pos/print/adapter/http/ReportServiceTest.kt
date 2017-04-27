@@ -1,10 +1,11 @@
 package com.clouway.pos.print.adapter.http
 
+import com.clouway.pos.print.JsonBuilder.Companion.aNewJson
 import com.clouway.pos.print.ReplyMatchers.Companion.contains
 import com.clouway.pos.print.ReplyMatchers.Companion.isBadRequest
 import com.clouway.pos.print.ReplyMatchers.Companion.isOk
 import com.clouway.pos.print.ReplyMatchers.Companion.isStatus
-import com.clouway.pos.print.SiteBricksRequestMockery
+import com.clouway.pos.print.FakeRequest.Factory.newJsonRequest
 import com.clouway.pos.print.core.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.jmock.AbstractExpectations
@@ -27,13 +28,10 @@ class ReportServiceTest {
   private val factory = context.mock(PrinterFactory::class.java)
   private val printer = context.mock(ReceiptPrinter::class.java)
 
-  private val request = SiteBricksRequestMockery()
   private val reportService = ReportService(factory)
 
   @Test
   fun printReportForOperator() {
-    val operatorReportDTO = ReportService.OperatorReportDTO("CLEAR", "::any id::", "::any ip::")
-
     context.checking(object : Expectations() {
       init {
         oneOf(factory).getPrinter("::any ip::")
@@ -43,7 +41,7 @@ class ReportServiceTest {
       }
     })
 
-    val reply = reportService.printOperatorReport(request.mockRequest(operatorReportDTO))
+    val reply = reportService.printOperatorReport(newJsonRequest(aNewJson().add("registerState", "CLEAR").add("operatorId", "::any id::").add("sourceIp", "::any ip::").build()))
 
     assertThat(reply, isOk)
     assertThat(reply, contains("Report completed"))
@@ -51,8 +49,6 @@ class ReportServiceTest {
 
   @Test
   fun missingCashRegisterForOperatorReport() {
-    val operatorReportDTO = ReportService.OperatorReportDTO("KEEP", "::any id::", "::any ip::")
-
     context.checking(object : Expectations() {
       init {
         oneOf(factory).getPrinter("::any ip::")
@@ -60,7 +56,7 @@ class ReportServiceTest {
       }
     })
 
-    val reply = reportService.printOperatorReport(request.mockRequest(operatorReportDTO))
+    val reply = reportService.printOperatorReport(newJsonRequest(aNewJson().add("sourceIp", "::any ip::").build()))
 
     assertThat(reply, isBadRequest)
     assertThat(reply, contains(ErrorResponse("Device not found.")))
@@ -68,8 +64,6 @@ class ReportServiceTest {
 
   @Test
   fun connectionFailureForOperatorReport() {
-    val operatorReportDTO = ReportService.OperatorReportDTO("CLEAR", "::any id::", "::any ip::")
-
     context.checking(object : Expectations() {
       init {
         oneOf(factory).getPrinter("::any ip::")
@@ -77,7 +71,7 @@ class ReportServiceTest {
       }
     })
 
-    val reply = reportService.printOperatorReport(request.mockRequest(operatorReportDTO))
+    val reply = reportService.printOperatorReport(newJsonRequest(aNewJson().add("sourceIp", "::any ip::").build()))
 
     assertThat(reply, isStatus(480))
     assertThat(reply, contains(ErrorResponse("Device can't connect.")))
@@ -85,18 +79,16 @@ class ReportServiceTest {
 
   @Test
   fun printReportForPeriod() {
-    val periodReportDTO = ReportService.PeriodReportDTO(LocalDateTime.parse("2017-04-23T18:25:43", DateTimeFormatter.ISO_LOCAL_DATE_TIME), LocalDateTime.parse("2017-04-23T18:25:43", DateTimeFormatter.ISO_LOCAL_DATE_TIME), "::any ip::", "SHORT")
-
     context.checking(object : Expectations() {
       init {
         oneOf(factory).getPrinter("::any ip::")
         will(AbstractExpectations.returnValue(printer))
-        oneOf(printer).reportForPeriod(LocalDateTime.parse("2017-04-23T18:25:43", DateTimeFormatter.ISO_LOCAL_DATE_TIME), LocalDateTime.parse("2017-04-23T18:25:43", DateTimeFormatter.ISO_LOCAL_DATE_TIME), PeriodType.SHORT)
+        oneOf(printer).reportForPeriod(LocalDateTime.parse("2017-01-01T00:00:00.000Z", DateTimeFormatter.ISO_DATE_TIME), LocalDateTime.parse("2017-01-02T00:00:00.000Z", DateTimeFormatter.ISO_DATE_TIME), PeriodType.SHORT)
         oneOf(printer).close()
       }
     })
 
-    val reply = reportService.printPeriodReport(request.mockRequest(periodReportDTO))
+    val reply = reportService.printPeriodReport(newJsonRequest(aNewJson().add("sourceIp", "::any ip::").add("from", "2017-01-01T00:00:00.000Z").add("to", "2017-01-02T00:00:00.000Z").add("periodType", "SHORT").build()))
 
     assertThat(reply, isOk)
     assertThat(reply, contains("Report completed"))
@@ -104,8 +96,6 @@ class ReportServiceTest {
 
   @Test
   fun missingCashRegisterForPeriodReport() {
-    val periodReportDTO = ReportService.PeriodReportDTO(LocalDateTime.parse("2017-04-23T18:25:43", DateTimeFormatter.ISO_LOCAL_DATE_TIME), LocalDateTime.parse("2017-04-23T18:25:43", DateTimeFormatter.ISO_LOCAL_DATE_TIME), "::any ip::", "EXTENDED")
-
     context.checking(object : Expectations() {
       init {
         oneOf(factory).getPrinter("::any ip::")
@@ -113,7 +103,7 @@ class ReportServiceTest {
       }
     })
 
-    val reply = reportService.printPeriodReport(request.mockRequest(periodReportDTO))
+    val reply = reportService.printPeriodReport(newJsonRequest(aNewJson().add("sourceIp", "::any ip::").build()))
 
     assertThat(reply, isBadRequest)
     assertThat(reply, contains(ErrorResponse("Device not found.")))
@@ -121,8 +111,6 @@ class ReportServiceTest {
 
   @Test
   fun connectionFailureForPeriodReport() {
-    val periodReportDTO = ReportService.PeriodReportDTO(LocalDateTime.parse("2017-04-23T18:25:43", DateTimeFormatter.ISO_LOCAL_DATE_TIME), LocalDateTime.parse("2017-04-23T18:25:43", DateTimeFormatter.ISO_LOCAL_DATE_TIME), "::any ip::", "EXTENDED")
-
     context.checking(object : Expectations() {
       init {
         oneOf(factory).getPrinter("::any ip::")
@@ -130,7 +118,7 @@ class ReportServiceTest {
       }
     })
 
-    val reply = reportService.printPeriodReport(request.mockRequest(periodReportDTO))
+    val reply = reportService.printPeriodReport(newJsonRequest(aNewJson().add("sourceIp", "::any ip::").build()))
 
     assertThat(reply, isStatus(480))
     assertThat(reply, contains(ErrorResponse("Device can't connect.")))

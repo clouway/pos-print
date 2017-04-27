@@ -5,7 +5,8 @@ import com.clouway.pos.print.ReplyMatchers.Companion.isBadRequest
 import com.clouway.pos.print.ReplyMatchers.Companion.isCreated
 import com.clouway.pos.print.ReplyMatchers.Companion.isNoContent
 import com.clouway.pos.print.ReplyMatchers.Companion.isOk
-import com.clouway.pos.print.SiteBricksRequestMockery
+import com.clouway.pos.print.FakeRequest
+import com.clouway.pos.print.FakeRequest.Factory.newRequest
 import com.clouway.pos.print.core.CashRegister
 import com.clouway.pos.print.core.ErrorResponse
 import com.clouway.pos.print.adapter.db.DeviceAlreadyExistException
@@ -29,7 +30,6 @@ class DeviceConfigurationServiceTest {
 
   private val repository = context.mock(CashRegisterRepository::class.java)
 
-  private val mockRequest = SiteBricksRequestMockery()
   private var cashRegistersService = DeviceConfigurationService(repository)
 
   @Test
@@ -44,7 +44,7 @@ class DeviceConfigurationServiceTest {
     })
 
 
-    val reply = cashRegistersService.registerDevice(mockRequest.mockRequest(cashRegisterDTO))
+    val reply = cashRegistersService.registerDevice(newRequest(cashRegisterDTO))
 
     assertThat(reply, isCreated)
     assertThat(reply, contains("10.10.5.7"))
@@ -62,7 +62,7 @@ class DeviceConfigurationServiceTest {
     })
 
 
-    val reply = cashRegistersService.registerDevice(mockRequest.mockRequest(cashRegisterDTO))
+    val reply = cashRegistersService.registerDevice(newRequest(cashRegisterDTO))
 
     assertThat(reply, isBadRequest)
     assertThat(reply, contains(ErrorResponse("Is already present")))
