@@ -1,5 +1,7 @@
 package com.clouway.pos.print.core;
 
+import com.google.common.base.Objects;
+
 /**
  * @author Lazo Apostolovski (lazo.apostolovski@clouway.com)
  */
@@ -13,6 +15,7 @@ public class ReceiptItem {
     private String name = "";
     private Double quantity = 1d;
     private Double price = 1d;
+    private Double vat = 20d;
 
     public Builder name(String name) {
       this.name = name;
@@ -26,6 +29,11 @@ public class ReceiptItem {
 
     public Builder price(Double price) {
       this.price = price;
+      return this;
+    }
+
+    public Builder vat(Double vat) {
+      this.vat = vat;
       return this;
     }
 
@@ -56,6 +64,11 @@ public class ReceiptItem {
    **/
   private Double price;
 
+  /**
+   *  Value added tax
+   */
+  private Double vat;
+
   public String getName() {
     return name;
   }
@@ -68,27 +81,23 @@ public class ReceiptItem {
     return price;
   }
 
+  public Double getVat() {
+    return vat;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-
     ReceiptItem that = (ReceiptItem) o;
-
-
-    if (name != null ? !name.equals(that.name) : that.name != null) return false;
-    if (price != null ? !price.equals(that.price) : that.price != null) return false;
-    if (quantity != null ? !quantity.equals(that.quantity) : that.quantity != null) return false;
-
-    return true;
+    return Objects.equal(name, that.name) &&
+      Objects.equal(quantity, that.quantity) &&
+      Objects.equal(price, that.price) &&
+      Objects.equal(vat, that.vat);
   }
 
   @Override
   public int hashCode() {
-    int result = name != null ? name.hashCode() : 0;
-    result = 31 * result + (name != null ? name.hashCode() : 0);
-    result = 31 * result + (quantity != null ? quantity.hashCode() : 0);
-    result = 31 * result + (price != null ? price.hashCode() : 0);
-    return result;
+    return Objects.hashCode(name, quantity, price, vat);
   }
 }

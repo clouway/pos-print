@@ -4,6 +4,7 @@ import com.clouway.pos.print.adapter.db.DeviceAlreadyExistException
 import com.clouway.pos.print.adapter.db.DeviceDoesNotExistException
 import com.clouway.pos.print.adapter.db.PersistentCashRegisterRepository
 import com.clouway.pos.print.core.CashRegister
+import com.clouway.pos.print.core.FiscalPolicy
 import com.google.common.collect.Lists
 import com.google.inject.util.Providers
 import org.junit.ClassRule
@@ -27,12 +28,12 @@ class PersistentCashRegisterRepositoryTest {
 
   @Test
   fun happyPath() {
-    val id1 = repository.register(CashRegister("", "any ip 1", "any ip 1", "any description"))
-    val id2 = repository.register(CashRegister("", "any ip 2", "any ip 2", "any description"))
+    val id1 = repository.register(CashRegister("", "any ip 1", "any ip 1", "any description", listOf(FiscalPolicy("1", 20.0))))
+    val id2 = repository.register(CashRegister("", "any ip 2", "any ip 2", "any description", listOf(FiscalPolicy("1", 20.0), FiscalPolicy("2", 0.0))))
 
     val expected = Lists.newArrayList(
-      CashRegister(id1, "any ip 1", "any ip 1", "any description"),
-      CashRegister(id2, "any ip 2", "any ip 2", "any description")
+      CashRegister(id1, "any ip 1", "any ip 1", "any description", listOf(FiscalPolicy("1", 20.0))),
+      CashRegister(id2, "any ip 2", "any ip 2", "any description", listOf(FiscalPolicy("1", 20.0), FiscalPolicy("2", 0.0)))
     )
 
     val actual = repository.getAll()
@@ -42,15 +43,15 @@ class PersistentCashRegisterRepositoryTest {
 
   @Test (expected = DeviceAlreadyExistException::class)
   fun registerAlreadyPresentDevice() {
-    repository.register(CashRegister("", "any ip", "any ip", "any description"))
-    repository.register(CashRegister("", "any ip", "any ip", "any description"))
+    repository.register(CashRegister("", "any ip", "any ip", "any description", listOf()))
+    repository.register(CashRegister("", "any ip", "any ip", "any description", listOf()))
   }
 
   @Test
   fun findBySourceIp() {
-    var expected = CashRegister("", "sourceIp", "any ip 1", "any description")
+    var expected = CashRegister("", "sourceIp", "any ip 1", "any description", listOf(FiscalPolicy(group="0", vat=20.0)))
     val id = repository.register(expected)
-    expected = CashRegister(id, "sourceIp", "any ip 1", "any description")
+    expected = CashRegister(id, "sourceIp", "any ip 1", "any description", listOf(FiscalPolicy(group="0", vat=20.0)))
     val actual = repository.getBySourceIp("sourceIp").get()
 
     assert(actual.equals(expected))
@@ -58,7 +59,7 @@ class PersistentCashRegisterRepositoryTest {
 
   @Test
   fun deleteCashRegister() {
-    val toBeRegistered = CashRegister("", "sourceIp", "any ip 1", "any description")
+    val toBeRegistered = CashRegister("", "sourceIp", "any ip 1", "any description", listOf())
     val id = repository.register(toBeRegistered)
     val registered = repository.getBySourceIp("sourceIp")
     repository.delete(id)

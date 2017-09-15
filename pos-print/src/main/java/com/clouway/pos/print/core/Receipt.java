@@ -108,7 +108,6 @@ public class Receipt {
    */
   private Double amount;
 
-
   private Receipt() {
   }
 
@@ -119,7 +118,6 @@ public class Receipt {
   public String getReceiptId() {
     return receiptId;
   }
-
 
   public List<ReceiptItem> getReceiptItems() {
     return receiptItems;

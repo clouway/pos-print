@@ -1,6 +1,7 @@
 package com.clouway.pos.print.adapter.db
 
 import com.clouway.pos.print.core.CashRegister
+import com.clouway.pos.print.core.FiscalPolicy
 import com.google.common.collect.Lists
 import com.google.inject.Inject
 import com.google.inject.Provider
@@ -29,8 +30,8 @@ class PersistentCashRegisterRepository @Inject constructor(private val database:
   }
 
   override fun getAll(): List<CashRegister> {
-    var cashRegisters = Lists.newArrayList<CashRegister>()
-    var cursor = devices().find()
+    val cashRegisters = Lists.newArrayList<CashRegister>()
+    val cursor = devices().find()
 
     cursor.forEach {
       cashRegisters.add(adapt(it))
@@ -45,7 +46,6 @@ class PersistentCashRegisterRepository @Inject constructor(private val database:
     if (result.first() == null) {
       return Optional.empty()
     }
-
     return Optional.of(adapt(result.first()))
   }
 
@@ -56,19 +56,31 @@ class PersistentCashRegisterRepository @Inject constructor(private val database:
   }
 
   private fun adapt(record: Document): CashRegister {
+    val policy = record["fiscalPolicy"] as Document
+    val policies = when {
+        policy == null || policy.isEmpty() -> mutableListOf(FiscalPolicy("1", 20.0))
+        else -> policy.keys.map { FiscalPolicy(it, policy[it] as Double) }
+    }
     return CashRegister(
       record.getObjectId("_id").toHexString(),
       record.getString("sourceIp"),
       record.getString("destination"),
-      record.getString("description")
+      record.getString("description"),
+      policies
     )
   }
 
   private fun adapt(record: CashRegister): Document {
+    val policy = Document()
+    for ((group, vat) in record.fiscalPolicy) {
+      policy.put(group.toString(), vat)
+    }
+
     return Document()
       .append("sourceIp", record.sourceIp)
       .append("destination", record.destination)
       .append("description", record.description)
+      .append("fiscalPolicy", policy)
   }
 
   private fun devices(): MongoCollection<Document> {

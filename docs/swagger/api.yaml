@@ -170,6 +170,21 @@ definitions:
         type: string
         description: Description for the device.
         example: 'Cash register one'
+      fiscalPolicy:
+        type: array
+        items:
+          type: object
+          properties:
+            group:
+              type: string
+              description: VAT group
+              example: '1'
+            vat:
+              type: number
+              format: double
+              description: VAT value
+              example: 20.0
+    description: VAT policy groups
   DeviceRegistrationResponse:
     type: object
     properties:
@@ -233,6 +248,11 @@ definitions:
                 format: double
                 description: Price of the item
                 example: 1.0
+              vat:
+                type: number
+                format: double
+                description: VAT
+                example: 20.0
   PrintReceiptResponse:
     type: object
     properties:
