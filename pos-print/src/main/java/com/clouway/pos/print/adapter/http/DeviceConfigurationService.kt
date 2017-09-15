@@ -5,6 +5,7 @@ import com.clouway.pos.print.adapter.db.DeviceAlreadyExistException
 import com.clouway.pos.print.adapter.db.DeviceDoesNotExistException
 import com.clouway.pos.print.core.CashRegister
 import com.clouway.pos.print.core.ErrorResponse
+import com.clouway.pos.print.core.FiscalPolicy
 import com.clouway.pos.print.transport.GsonTransport
 import com.google.common.collect.Lists
 import com.google.inject.Inject
@@ -34,11 +35,11 @@ class DeviceConfigurationService @Inject constructor(private var repository: Cas
 
   @Post
   fun registerDevice(request: Request): Reply<*> {
-    val cashRegisterDTO = request.read(CashRegisterDTO::class.java).`as`(Json::class.java)
-    var deviceId: String
+    val cashRegisterDTO = request.read(CashRegisterDTO::class.java).`as`(GsonTransport::class.java)
+    val deviceId: String
 
     try {
-      deviceId = repository.register(CashRegister(cashRegisterDTO.id, cashRegisterDTO.sourceIp, cashRegisterDTO.destination, cashRegisterDTO.description))
+      deviceId = repository.register(CashRegister(cashRegisterDTO.id, cashRegisterDTO.sourceIp, cashRegisterDTO.destination, cashRegisterDTO.description, cashRegisterDTO.fiscalPolicy))
     } catch (e: DeviceAlreadyExistException) {
       return Reply.with(ErrorResponse("Is already present")).`as`(GsonTransport::class.java).status(SC_BAD_REQUEST)
     }
@@ -49,7 +50,7 @@ class DeviceConfigurationService @Inject constructor(private var repository: Cas
   @Delete
   @At("/:id")
   fun deleteDevice(@Named("id") id: String): Reply<*> {
-    var deviceId: String
+    val deviceId: String
 
     try {
       deviceId = repository.delete(id)
@@ -60,13 +61,11 @@ class DeviceConfigurationService @Inject constructor(private var repository: Cas
     return Reply.with(deviceId).`as`(GsonTransport::class.java).status(SC_NO_CONTENT)
   }
 
-  internal class CashRegisterDTO(var id: String = "", var sourceIp: String = "", var destination: String = "", var description: String = "")
+  internal class CashRegisterDTO(val id: String = "", val sourceIp: String = "", val destination: String = "", val description: String = "", val fiscalPolicy: List<FiscalPolicy>)
 
   internal fun adapt(devices: List<CashRegister>): List<CashRegisterDTO> {
     val devicesDTO = Lists.newArrayList<CashRegisterDTO>()
-
-    devices.mapTo(devicesDTO) { CashRegisterDTO(it.id, it.sourceIp, it.destination, it.description) }
-
+    devices.mapTo(devicesDTO) { CashRegisterDTO(it.id, it.sourceIp, it.destination, it.description, it.fiscalPolicy) }
     return devicesDTO
   }
 }

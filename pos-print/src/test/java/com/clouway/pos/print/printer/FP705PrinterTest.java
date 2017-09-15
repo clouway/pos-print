@@ -388,6 +388,6 @@ public class FP705PrinterTest {
 
   private FP705Printer printer() throws IOException {
     Socket socket = new Socket("localhost", fakeFP705.port());
-    return new FP705Printer(socket.getInputStream(), socket.getOutputStream());
+    return new FP705Printer(socket.getInputStream(), socket.getOutputStream(), Collections.emptyList());
   }
 }

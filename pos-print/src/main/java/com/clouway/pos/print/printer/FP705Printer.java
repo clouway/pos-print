@@ -1,15 +1,7 @@
 package com.clouway.pos.print.printer;
 
 
-import com.clouway.pos.print.core.IOChannel;
-import com.clouway.pos.print.core.PeriodType;
-import com.clouway.pos.print.core.PrintReceiptResponse;
-import com.clouway.pos.print.core.Receipt;
-import com.clouway.pos.print.core.ReceiptItem;
-import com.clouway.pos.print.core.ReceiptPrinter;
-import com.clouway.pos.print.core.RegisterState;
-import com.clouway.pos.print.core.RequestTimeoutException;
-import com.clouway.pos.print.core.WarningChannel;
+import com.clouway.pos.print.core.*;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Bytes;
 import org.jetbrains.annotations.NotNull;
@@ -21,6 +13,7 @@ import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static com.clouway.pos.print.printer.Status.FISCAL_RECEIPT_IS_OPEN;
@@ -64,13 +57,17 @@ public class FP705Printer implements ReceiptPrinter {
   private static final byte TEXT_RECEIPT_CLOSE = (byte) 0x27;
   private static final byte TEXT_RECEIPT_PRINT_TEXT = (byte) 0x2A;
 
+  private static final String DEFAULT_VAT_GROUP = "1";
+
   private InputStream inputStream;
   private OutputStream outputStream;
   private final Integer maxRetries = 50;
+  private List<FiscalPolicy> fiscalPolicy;
 
-  public FP705Printer(InputStream inputStream, OutputStream outputStream) {
+  public FP705Printer(InputStream inputStream, OutputStream outputStream, List<FiscalPolicy> fiscalPolicy) {
     this.inputStream = inputStream;
     this.outputStream = outputStream;
+    this.fiscalPolicy = fiscalPolicy;
   }
 
   @Override
@@ -82,7 +79,6 @@ public class FP705Printer implements ReceiptPrinter {
     finalizeNotCompletedOperations(seq, channel);
 
     channel.sendPacket(buildPacket(seq++, TEXT_RECEIPT_OPEN, ""));
-
     for (String prefix : receipt.prefixLines()) {
       channel.sendPacket(buildPacket(seq++, TEXT_RECEIPT_PRINT_TEXT, params(prefix)));
     }
@@ -173,11 +169,21 @@ public class FP705Printer implements ReceiptPrinter {
       channel.sendPacket(buildPacket(seq++, FISCAL_RECEIPT_PRINT_TEXT, params(prefix)));
     }
 
+
     double sum = 0;
     for (ReceiptItem item : receipt.getReceiptItems()) {
+
+      String vatGroup = DEFAULT_VAT_GROUP;
+      for (FiscalPolicy policy : fiscalPolicy) {
+        if (policy.getVat() == item.getVat()) {
+          vatGroup = policy.getGroup();
+          break;
+        }
+      }
+
       String priceValue = String.format("%.2f", item.getPrice());
       String quantityValue = String.format("%.3f", item.getQuantity());
-      channel.sendPacket(buildPacket(seq++, FISCAL_RECEIPT_PAYMENT, params(item.getName(), "1", priceValue, quantityValue, "0", "", "0")));
+      channel.sendPacket(buildPacket(seq++, FISCAL_RECEIPT_PAYMENT, params(item.getName(), vatGroup, priceValue, quantityValue, "0", "", "0")));
       sum += item.getPrice() * item.getQuantity();
     }
 

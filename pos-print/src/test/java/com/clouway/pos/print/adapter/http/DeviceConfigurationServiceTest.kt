@@ -5,13 +5,13 @@ import com.clouway.pos.print.ReplyMatchers.Companion.isBadRequest
 import com.clouway.pos.print.ReplyMatchers.Companion.isCreated
 import com.clouway.pos.print.ReplyMatchers.Companion.isNoContent
 import com.clouway.pos.print.ReplyMatchers.Companion.isOk
-import com.clouway.pos.print.FakeRequest
 import com.clouway.pos.print.FakeRequest.Factory.newRequest
 import com.clouway.pos.print.core.CashRegister
 import com.clouway.pos.print.core.ErrorResponse
 import com.clouway.pos.print.adapter.db.DeviceAlreadyExistException
 import com.clouway.pos.print.adapter.db.CashRegisterRepository
 import com.clouway.pos.print.adapter.db.DeviceDoesNotExistException
+import com.clouway.pos.print.core.FiscalPolicy
 import com.google.common.collect.Lists
 import org.hamcrest.MatcherAssert.assertThat
 import org.jmock.AbstractExpectations
@@ -34,11 +34,11 @@ class DeviceConfigurationServiceTest {
 
   @Test
   fun registerCashRegisterDevice() {
-    val cashRegisterDTO = DeviceConfigurationService.CashRegisterDTO("", "89.100.10.5", "10.10.5.7", "cash register 1")
+    val cashRegisterDTO = DeviceConfigurationService.CashRegisterDTO("", "89.100.10.5", "10.10.5.7", "cash register 1", listOf(FiscalPolicy("1", 20.0)))
 
     context.checking(object : Expectations() {
       init {
-        oneOf(repository).register(CashRegister("", "89.100.10.5","10.10.5.7","cash register 1"))
+        oneOf(repository).register(CashRegister("", "89.100.10.5","10.10.5.7","cash register 1", listOf(FiscalPolicy("1", 20.0))))
         will(AbstractExpectations.returnValue("10.10.5.7"))
       }
     })
@@ -52,11 +52,11 @@ class DeviceConfigurationServiceTest {
 
   @Test
   fun deviceIsPresent() {
-    val cashRegisterDTO = DeviceConfigurationService.CashRegisterDTO("", "89.100.10.5", "10.10.5.7", "cash register 1")
+    val cashRegisterDTO = DeviceConfigurationService.CashRegisterDTO("", "89.100.10.5", "10.10.5.7", "cash register 1", listOf())
 
     context.checking(object : Expectations() {
       init {
-        oneOf(repository).register(CashRegister("", "89.100.10.5","10.10.5.7","cash register 1"))
+        oneOf(repository).register(CashRegister("", "89.100.10.5","10.10.5.7","cash register 1", listOf()))
         will(AbstractExpectations.throwException(DeviceAlreadyExistException()))
       }
     })
@@ -74,17 +74,17 @@ class DeviceConfigurationServiceTest {
       init {
         oneOf(repository).getAll()
         will(AbstractExpectations.returnValue(Lists.newArrayList<CashRegister>(
-          CashRegister("", "89.100.10.5", "10.10.5.7", "cash register 1"),
-          CashRegister("", "89.100.10.5", "10.10.5.8", "cash register 2"),
-          CashRegister("", "89.100.10.5", "10.10.5.9", "cash register 3")
+          CashRegister("", "89.100.10.5", "10.10.5.7", "cash register 1", listOf()),
+          CashRegister("", "89.100.10.5", "10.10.5.8", "cash register 2", listOf()),
+          CashRegister("", "89.100.10.5", "10.10.5.9", "cash register 3", listOf())
         )))
       }
     })
 
     val expected = Lists.newArrayList(
-      DeviceConfigurationService.CashRegisterDTO("", "89.100.10.5", "10.10.5.7", "cash register 1"),
-      DeviceConfigurationService.CashRegisterDTO("", "89.100.10.5", "10.10.5.8", "cash register 2"),
-      DeviceConfigurationService.CashRegisterDTO("", "89.100.10.5", "10.10.5.9", "cash register 3")
+      DeviceConfigurationService.CashRegisterDTO("", "89.100.10.5", "10.10.5.7", "cash register 1", listOf() ),
+      DeviceConfigurationService.CashRegisterDTO("", "89.100.10.5", "10.10.5.8", "cash register 2" , listOf()),
+      DeviceConfigurationService.CashRegisterDTO("", "89.100.10.5", "10.10.5.9", "cash register 3", listOf())
     )
 
     val reply = cashRegistersService.getDevices()

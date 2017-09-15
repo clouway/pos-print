@@ -3,6 +3,7 @@ package com.clouway.pos.print.printer
 import com.clouway.pos.print.core.DeviceNotFoundException
 import com.clouway.pos.print.core.PrinterFactory
 import com.clouway.pos.print.adapter.db.CashRegisterRepository
+import com.clouway.pos.print.core.FiscalPolicy
 import com.google.inject.Inject
 import java.net.Socket
 
@@ -27,7 +28,9 @@ class FP705PrinterFactory
       port = Integer.valueOf(parts[1])
     }
 
+    val fiscalPolicy: List<FiscalPolicy> = possibleRegister.get().fiscalPolicy
+
     val socket = Socket(host, port)
-    return FP705Printer(socket.getInputStream(), socket.getOutputStream())
+    return FP705Printer(socket.getInputStream(), socket.getOutputStream(), fiscalPolicy )
   }
 }

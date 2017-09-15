@@ -55,6 +55,6 @@ class PrintService @Inject constructor(private var factory: PrinterFactory) {
     }
   }
 
-  internal data class ReceiptDTO(var sourceIp: String = "", var operatorId: String = "", var fiscal: Boolean = false, var receipt: Receipt = newReceipt().build())
+  internal data class ReceiptDTO(val sourceIp: String = "", val operatorId: String = "", val fiscal: Boolean = false, val receipt: Receipt = newReceipt().build())
   internal data class PrintReceiptResponseDTO(var warnings: Set<Status> = emptySet())
 }
