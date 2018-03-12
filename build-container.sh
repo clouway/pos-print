@@ -7,5 +7,5 @@ if [ $STATUS == 1 ]; then
     exit
 fi
 
-docker build -t clouway/posprint:1.0 .
-docker push clouway/posprint:1.0
+docker build -t clouway/posprint:1.1 .
+docker push clouway/posprint:1.1
