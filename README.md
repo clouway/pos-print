@@ -19,7 +19,7 @@ and runned on any machine.
 ### Using from Docker
 
 ```sh
-docker run -it clouway/posprint:1.0 --dbHost localhost:27017 --dbName posprint
+docker run -it clouway/posprint:1.1 --dbHost localhost:27017 --dbName posprint
 ```
 
 ### Receipt Sample 
