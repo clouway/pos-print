@@ -4,7 +4,6 @@ import com.clouway.pos.print.ReplyMatchers.Companion.contains
 import com.clouway.pos.print.ReplyMatchers.Companion.isNotFound
 import com.clouway.pos.print.ReplyMatchers.Companion.isOk
 import com.clouway.pos.print.ReplyMatchers.Companion.isStatus
-import com.clouway.pos.print.FakeRequest
 import com.clouway.pos.print.FakeRequest.Factory.newRequest
 import com.clouway.pos.print.core.*
 import com.clouway.pos.print.printer.Status
@@ -31,10 +30,9 @@ class PrintServiceTest {
 
   @Test
   fun printReceipt() {
-    val receiptDto = PrintService.ReceiptDTO("sourceIp", "::any ip::", false)
+    val receiptDto = PrintService.PrintReceiptRequestDTO("sourceIp", "::any ip::", false)
     val anyReceipt = Receipt.newReceipt().build()
-    val warnings = setOf<Status>(Status.NON_FISCAL_RECEIPT_IS_OPEN)
-    val dto: PrintService.PrintReceiptResponseDTO = PrintService.PrintReceiptResponseDTO(warnings)
+    val warnings = setOf(Status.NON_FISCAL_RECEIPT_IS_OPEN)
 
     context.checking(object : Expectations() {
       init {
@@ -48,14 +46,14 @@ class PrintServiceTest {
 
     val reply = service.printReceipt(newRequest(receiptDto))
     assertThat(reply, isOk)
-    assertThat(reply, contains(dto))
+    assertThat(reply, contains(PrintService.PrintReceiptResponseDTO(warnings)))
   }
 
   @Test
   fun printFiscalReceipt() {
-    val receiptDto = PrintService.ReceiptDTO("sourceIp", "::any ip::", true)
+    val receiptDto = PrintService.PrintReceiptRequestDTO("sourceIp", "::any ip::", true)
     val anyReceipt = Receipt.newReceipt().build()
-    val warnings = setOf<Status>(Status.FISCAL_RECEIPT_IS_OPEN)
+    val warnings = setOf(Status.FISCAL_RECEIPT_IS_OPEN)
     val dto: PrintService.PrintReceiptResponseDTO = PrintService.PrintReceiptResponseDTO(warnings)
 
     context.checking(object : Expectations() {
@@ -75,9 +73,9 @@ class PrintServiceTest {
 
   @Test
   fun receiptDidNotOpened() {
-    val receiptDto = PrintService.ReceiptDTO("sourceIp", "::any ip::", false)
+    val receiptDto = PrintService.PrintReceiptRequestDTO("sourceIp", "::any ip::", false)
     val anyReceipt = Receipt.newReceipt().build()
-    val warnings = setOf<Status>(Status.END_OF_PAPER)
+    val warnings = setOf(Status.END_OF_PAPER)
     val dto: PrintService.PrintReceiptResponseDTO = PrintService.PrintReceiptResponseDTO(warnings)
 
     context.checking(object : Expectations() {
@@ -97,9 +95,9 @@ class PrintServiceTest {
 
   @Test
   fun fiscalReceiptDidNotOpened() {
-    val receiptDto = PrintService.ReceiptDTO("sourceIp", "::any ip::", true)
+    val receiptDto = PrintService.PrintReceiptRequestDTO("sourceIp", "::any ip::", true)
     val anyReceipt = Receipt.newReceipt().build()
-    val warnings = setOf<Status>(Status.END_OF_PAPER)
+    val warnings = setOf(Status.END_OF_PAPER)
     val dto: PrintService.PrintReceiptResponseDTO = PrintService.PrintReceiptResponseDTO(warnings)
 
     context.checking(object : Expectations() {
@@ -119,7 +117,7 @@ class PrintServiceTest {
 
   @Test
   fun unknownCashRegister() {
-    val receiptDto = PrintService.ReceiptDTO("::any ip::", "::any ip::", true)
+    val receiptDto = PrintService.PrintReceiptRequestDTO("::any ip::", "::any ip::", true)
 
     context.checking(object : Expectations() {
       init {
@@ -135,7 +133,7 @@ class PrintServiceTest {
 
   @Test
   fun connectionCannotBeEstablished() {
-    val receiptDto = PrintService.ReceiptDTO("::any ip::", "::any ip::", true)
+    val receiptDto = PrintService.PrintReceiptRequestDTO("::any ip::", "::any ip::", true)
 
     context.checking(object : Expectations() {
       init {
@@ -151,7 +149,7 @@ class PrintServiceTest {
 
   @Test
   fun printerRequestTimeout() {
-    val receiptDto = PrintService.ReceiptDTO("sourceIp", "::any ip::", false)
+    val receiptDto = PrintService.PrintReceiptRequestDTO("sourceIp", "::any ip::", false)
     val anyReceipt = Receipt.newReceipt().build()
 
     context.checking(object : Expectations() {

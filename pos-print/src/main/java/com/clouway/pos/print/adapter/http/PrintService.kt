@@ -2,9 +2,9 @@ package com.clouway.pos.print.adapter.http
 
 import com.clouway.pos.print.core.*
 import com.clouway.pos.print.core.Receipt.newReceipt
+import com.clouway.pos.print.core.ReceiptItem.newItem
 import com.clouway.pos.print.printer.Status
 import com.clouway.pos.print.transport.GsonTransport
-import com.google.gson.GsonBuilder
 import com.google.sitebricks.At
 import com.google.sitebricks.headless.Reply
 import com.google.sitebricks.headless.Request
@@ -24,17 +24,18 @@ class PrintService @Inject constructor(private var factory: PrinterFactory) {
   fun printReceipt(request: Request): Reply<*> {
     val response: PrintReceiptResponse
     try {
-      val dto = request.read(ReceiptDTO::class.java).`as`(GsonTransport::class.java)
+      val dto = request.read(PrintReceiptRequestDTO::class.java).`as`(GsonTransport::class.java)
+      val receipt = dto.receipt.adapt()
       val printer = factory.getPrinter(dto.sourceIp)
       try {
-        when {
+        response = when {
           dto.fiscal
-          -> response = printer.printFiscalReceipt(dto.receipt)
+          -> printer.printFiscalReceipt(receipt)
           else
-          -> response = printer.printReceipt(dto.receipt)
+          -> printer.printReceipt(receipt)
         }
       } catch (e: RequestTimeoutException) {
-        return Reply.with(ErrorResponse("Printer request timeout.\n" + e.message)).`as`(GsonTransport::class.java).status(504)
+        return Reply.with(ErrorResponse("Printer request timeout.\n${e.message}")).`as`(GsonTransport::class.java).status(504)
       } finally {
         printer.close()
       }
@@ -44,8 +45,7 @@ class PrintService @Inject constructor(private var factory: PrinterFactory) {
       return Reply.with(ErrorResponse("Device can't connect.")).`as`(GsonTransport::class.java).status(480)
     }
 
-    val responseDTO: PrintReceiptResponseDTO = PrintReceiptResponseDTO(response.warnings)
-    println(GsonBuilder().create().toJson(responseDTO))
+    val responseDTO = PrintReceiptResponseDTO(response.warnings)
 
     return if (responseDTO.warnings.contains(Status.FISCAL_RECEIPT_IS_OPEN) ||
       responseDTO.warnings.contains(Status.NON_FISCAL_RECEIPT_IS_OPEN)) {
@@ -55,6 +55,36 @@ class PrintService @Inject constructor(private var factory: PrinterFactory) {
     }
   }
 
-  internal data class ReceiptDTO(val sourceIp: String = "", val operatorId: String = "", val fiscal: Boolean = false, val receipt: Receipt = newReceipt().build())
+  internal data class PrintReceiptRequestDTO(val sourceIp: String = "", val operatorId: String = "", val fiscal: Boolean = false, val receipt: ReceiptDTO = ReceiptDTO())
+
+  internal data class ReceiptDTO(@JvmField val receiptId: String = "",
+                                 @JvmField val prefixLines: List<String> = listOf(),
+                                 @JvmField val receiptItems: List<ReceiptItemDTO> = listOf(),
+                                 @JvmField val suffixLines: List<String> = listOf(),
+                                 @JvmField var currency: String = "BGN",
+                                 @JvmField var amount: Double = 0.00) {
+    fun adapt(): Receipt {
+      return newReceipt()
+        .withReceiptId(receiptId)
+        .prefixLines(prefixLines)
+        .addItems(receiptItems.map { it.asReceiptItem() })
+        .suffixLines(suffixLines)
+        .currency(currency)
+        .withAmount(amount)
+        .build()
+    }
+  }
+
+  internal data class ReceiptItemDTO(@JvmField val name: String = "",
+                                     @JvmField val quantity: Double = 1.0,
+                                     @JvmField val price: Double = 0.0,
+                                     @JvmField val vat: Double = 0.0,
+                                     @JvmField val department: String = "0"
+  ) {
+    fun asReceiptItem(): ReceiptItem {
+      return newItem().name(this.name).quantity(this.quantity).price(this.price).vat(this.vat).department(department).build()
+    }
+  }
+
   internal data class PrintReceiptResponseDTO(var warnings: Set<Status> = emptySet())
 }

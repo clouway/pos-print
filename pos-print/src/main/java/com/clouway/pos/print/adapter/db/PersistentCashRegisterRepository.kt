@@ -56,7 +56,7 @@ class PersistentCashRegisterRepository @Inject constructor(private val database:
   }
 
   private fun adapt(record: Document): CashRegister {
-    val policy = record["fiscalPolicy"] as Document
+    val policy = record["fiscalPolicy"] as Document?
     val policies = when {
         policy == null || policy.isEmpty() -> mutableListOf(FiscalPolicy("1", 20.0))
         else -> policy.keys.map { FiscalPolicy(it, policy[it] as Double) }

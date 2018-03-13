@@ -97,7 +97,7 @@ public class FP705Printer implements ReceiptPrinter {
     return new PrintReceiptResponse(channel.warnings());
   }
 
-  public void reportForPeriod(LocalDateTime start, LocalDateTime end, PeriodType periodType) throws IOException {
+  public void reportForPeriod(LocalDateTime start, LocalDateTime end, PeriodType periodType) {
 
     DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
 
@@ -183,7 +183,7 @@ public class FP705Printer implements ReceiptPrinter {
 
       String priceValue = String.format("%.2f", item.getPrice());
       String quantityValue = String.format("%.3f", item.getQuantity());
-      channel.sendPacket(buildPacket(seq++, FISCAL_RECEIPT_PAYMENT, params(item.getName(), vatGroup, priceValue, quantityValue, "0", "", "0")));
+      channel.sendPacket(buildPacket(seq++, FISCAL_RECEIPT_PAYMENT, params(item.getName(), vatGroup, priceValue, quantityValue, "0", "", item.getDepartment())));
       sum += item.getPrice() * item.getQuantity();
     }
 

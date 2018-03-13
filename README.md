@@ -46,16 +46,11 @@ of simple receipt.
         "amount": 1.0,
         "receiptItems": [
             {
-            "properties": {
-              "name": {
-                  "type": "string",
-                  "description": "Name of the item",
-                  "example": null
-                },
-                "quantity": 2.0,
-                "price": 1.0
-              }
-            }
+              "name": "Item1",
+              "quantity": 2.0,
+              "price": 1.0,
+              "department": "0"
+            }            
           ]
         }
       }
