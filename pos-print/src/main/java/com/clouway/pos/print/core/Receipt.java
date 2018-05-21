@@ -1,7 +1,5 @@
 package com.clouway.pos.print.core;
 
-import com.google.common.base.MoreObjects;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -17,8 +15,8 @@ public class Receipt {
   }
 
   public static class Builder {
-    private String receiptId = "";
-    private Double amount = 0.0d;
+    private String receiptId;
+    private Double amount;
     private String currency = "USD";
 
     private List<String> prefixLines = new ArrayList<>();
@@ -61,13 +59,8 @@ public class Receipt {
       return this;
     }
 
-    public Builder addItems(ReceiptItem... receiptItems) {
-      this.receiptItems.addAll(Arrays.asList(receiptItems));
-      return this;
-    }
-
-    public Builder addItems(List<ReceiptItem> items) {
-      this.receiptItems.addAll(items);
+    public Builder addItems(ReceiptItem... receiptItem) {
+      this.receiptItems.addAll(Arrays.asList(receiptItem));
       return this;
     }
 
@@ -155,17 +148,5 @@ public class Receipt {
   @Override
   public int hashCode() {
     return Objects.hash(receiptId, receiptItems, amount);
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-      .add("receiptId", receiptId)
-      .add("prefixLines", prefixLines)
-      .add("receiptItems", receiptItems)
-      .add("suffixLines", suffixLines)
-      .add("currency", currency)
-      .add("amount", amount)
-      .toString();
   }
 }

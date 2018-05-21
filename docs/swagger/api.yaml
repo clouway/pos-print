@@ -2,7 +2,7 @@ swagger: '2.0'
 info:
   title: POS Print API
   description: Application for cash registers operations
-  version: "1.0.1"
+  version: "1.0.0"
 host: yourname.telcong.com
 schemes:
   - https
@@ -253,10 +253,6 @@ definitions:
                 format: double
                 description: VAT
                 example: 20.0
-              department:
-                type: string
-                description: Department number
-                example: 0
   PrintReceiptResponse:
     type: object
     properties:
