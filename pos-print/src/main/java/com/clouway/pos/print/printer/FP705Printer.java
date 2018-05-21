@@ -1,10 +1,21 @@
 package com.clouway.pos.print.printer;
 
 
-import com.clouway.pos.print.core.*;
+import com.clouway.pos.print.core.FiscalPolicy;
+import com.clouway.pos.print.core.IOChannel;
+import com.clouway.pos.print.core.PeriodType;
+import com.clouway.pos.print.core.PrintReceiptResponse;
+import com.clouway.pos.print.core.Receipt;
+import com.clouway.pos.print.core.ReceiptItem;
+import com.clouway.pos.print.core.ReceiptPrinter;
+import com.clouway.pos.print.core.RegisterState;
+import com.clouway.pos.print.core.RequestTimeoutException;
+import com.clouway.pos.print.core.WarningChannel;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Bytes;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,6 +36,7 @@ import static com.clouway.pos.print.printer.Status.NON_FISCAL_RECEIPT_IS_OPEN;
  * @author Miroslav Genov (miroslav.genov@clouway.com)
  */
 public class FP705Printer implements ReceiptPrinter {
+  private Logger logger = LoggerFactory.getLogger(FP705Printer.class);
 
   private static final byte READ_DATE_TIME = (byte) 0x3E;
 
@@ -342,16 +354,23 @@ public class FP705Printer implements ReceiptPrinter {
 
   @NotNull
   private WarningChannel createChannel(int maxRetries) {
-    return new WarningChannel(new IOChannel(inputStream, outputStream,maxRetries), new HashSet<>());
+    return new WarningChannel(new IOChannel(inputStream, outputStream, maxRetries), new HashSet<>());
   }
 
   private void finalizeNotCompletedOperations(byte seq, WarningChannel channel) throws IOException {
-    Set<Status> initStatus = getStatus();
-    if (initStatus.contains(NON_FISCAL_RECEIPT_IS_OPEN)) {
+    Set<Status> currentStatus = getStatus();
+    
+    logger.info("Checking whether to finalize existing operations and status returned: " + currentStatus);
+    if (currentStatus.contains(NON_FISCAL_RECEIPT_IS_OPEN)) {
+
+      logger.info("Non fiscal receipt was open, so we are trying to close it");
       closeNonFiscalReceipt(seq, channel);
+      logger.info("Non fiscal receipt closed");
     }
-    if (initStatus.contains(FISCAL_RECEIPT_IS_OPEN)) {
+    if (currentStatus.contains(FISCAL_RECEIPT_IS_OPEN)) {
+      logger.info("Fiscal receipt was open, so we are trying to close it");
       closeFiscalReceipt(seq, 0f, channel);
+      logger.info("Fiscal receipt closed");
     }
   }
 
