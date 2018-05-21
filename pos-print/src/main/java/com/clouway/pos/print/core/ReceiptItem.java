@@ -16,7 +16,6 @@ public class ReceiptItem {
     private Double quantity = 1d;
     private Double price = 1d;
     private Double vat = 20d;
-    private String department = "0";
 
     public Builder name(String name) {
       this.name = name;
@@ -38,11 +37,6 @@ public class ReceiptItem {
       return this;
     }
 
-    public Builder department(String value) {
-      this.department = value;
-      return this;
-    }
-
     public ReceiptItem build() {
       return new ReceiptItem(this);
     }
@@ -53,8 +47,6 @@ public class ReceiptItem {
     this.name = builder.name;
     this.price = builder.price;
     this.quantity = builder.quantity;
-    this.vat = builder.vat;
-    this.department = builder.department;
   }
 
   /**
@@ -77,11 +69,6 @@ public class ReceiptItem {
    */
   private Double vat;
 
-  /**
-   * Department to which this line belongs
-   */
-  private String department;
-
   public String getName() {
     return name;
   }
@@ -98,10 +85,6 @@ public class ReceiptItem {
     return vat;
   }
 
-  public String getDepartment() {
-    return department;
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -110,12 +93,11 @@ public class ReceiptItem {
     return Objects.equal(name, that.name) &&
       Objects.equal(quantity, that.quantity) &&
       Objects.equal(price, that.price) &&
-      Objects.equal(vat, that.vat) &&
-      Objects.equal(department, that.department);
+      Objects.equal(vat, that.vat);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(name, quantity, price, vat, department);
+    return Objects.hashCode(name, quantity, price, vat);
   }
 }
