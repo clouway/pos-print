@@ -109,7 +109,90 @@ paths:
             Problem occured while printing the receipt
           schema:
             $ref: "#/definitions/RequestTimeoutError"
+            
+  /v2/receipts/print:
+    post:
+      summary: Print Receipts
+      parameters:
+        - in: body
+          name: request
+          description: Prining receipts and fiscal receipts
+          required: true
+          schema:
+            $ref: '#/definitions/PrintReceiptRequest'
+      description: Saving receipts to be pritned asynchronously
+      responses:
+        200:
+          description: Receipt saved and queued to be printed
+          schema:
+            type: string
+            example: "receiptId"
+        400:
+          description:
+            The requested receipt is already saved
+              
+  /v2/receipts/{id}/status:
+    get:
+      summary: Get receipt status
+      parameters:
+        - in: path
+          name: id
+          type: string
+          required: true
+          description: The id of the receipt
+      responses:
+        200:
+          description: Receipt found
+          schema:
+            type: string
+            example: "PRINTING"
+        404:
+          description: Receipt not found
 
+  /v2/receipts/latest/{limit}:
+    get:
+      summary: Gets latest receipts up to a limit
+      parameters:
+      - in: path
+        name: limit
+        type: integer
+        format: int32
+        required: true
+        description: The limit to return
+      responses:
+        200:
+          description: Receipts retrieved
+          schema:
+            type: object
+            properties:
+              printStatus:
+                type: string
+              requestId:
+                type: string
+              operatorId:
+                type: string
+              sourceIp:
+                type: string
+              isFiscal:
+                type: boolean
+              receipt:
+                $ref: '#/definitions/Receipt'
+
+  /v2/receipts/{requestId}/requeue:
+    post:
+      summary: Requeues a receipt
+      parameters:
+      - in: path
+        name: requestId
+        type: string
+        required: true
+        description: The request id of the receipt
+      responses:
+        200:
+          description: The receipt was requeued for printing
+        404:
+           description: The receipt has not been registered
+  
   /v1/reports/operator/print:
     post:
       summary: Prints Report
@@ -194,6 +277,10 @@ definitions:
   PrintReceiptRequest:
     type: object
     properties:
+      receiptId:
+        type: string
+        description: Unique id representing the receipt
+        example: "receiptId"
       sourceIp:
         type: string
         description: Unique ip representing the owner of the device.
@@ -206,53 +293,60 @@ definitions:
         type: boolean
         description: true means fiscal receipt, false means text
       receipt:
-        type: object
-        description: Represents receipt item
-        properties:
-          receiptId:
-            type: string
-            description: Receipt ID
-            example: "123"
-          currency:
-            type: string
-            description: Currency
-            example: "USD"
-          prefixLines:
-            type: array
-            items:
-              type: string
-          suffixLines:
-            type: array
-            items:
-              type: string
-          amount:
-            type: number
-            format: double
-            description: amount to be paid
-            example: 1.0
-          receiptItems:
-            type: object
-            description: Represents receipt item
-            properties:
-              name:
-                type: string
-                description: Name of the item
-                example:
-              quantity:
-                type: number
-                format: double
-                description: Quantity of the item
-                example: 2.0
-              price:
-                type: number
-                format: double
-                description: Price of the item (with vat)
-                example: 1.0
-              vat:
-                type: number
-                format: double
-                description: VAT
-                example: 20.0
+        $ref: '#/definitions/Receipt'
+  Receipt:
+    type: object
+    description: Represents receipt item
+    properties:
+      receiptId:
+        type: string
+        description: Receipt ID
+        example: "123"
+      currency:
+        type: string
+        description: Currency
+        example: "USD"
+      prefixLines:
+        type: array
+        items:
+          type: string
+      suffixLines:
+        type: array
+        items:
+          type: string
+      amount:
+        type: number
+        format: double
+        description: amount to be paid
+        example: 1.0
+      receiptItems:
+        type: array
+        items:
+          $ref: '#/definitions/ReceiptItem'
+  ReceiptItem:
+    type: object
+    description: Represents receipt item
+    properties:
+      name:
+        type: string
+        description: Name of the item
+        example:
+      quantity:
+        type: number
+        format: double
+        description: Quantity of the item
+        example: 2.0
+      price:
+        type: number
+        format: double
+        description: Price of the item (with vat)
+        example: 1.0
+      vat:
+        type: number
+        format: double
+        description: VAT
+        example: 20.0
+              
   PrintReceiptResponse:
     type: object
     properties:

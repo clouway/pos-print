@@ -1,5 +1,6 @@
 package com.clouway.pos.print;
 
+import com.clouway.pos.print.core.BackgroundReceiptPrintingService;
 import com.clouway.pos.print.adapter.http.HttpBackend;
 import com.clouway.pos.print.adapter.http.HttpModule;
 import com.clouway.pos.print.core.CoreModule;
@@ -39,8 +40,12 @@ public class PosPrintService {
       new PersistentModule(client, commandCLI.dbName())
     );
 
+
     HttpBackend backend = new HttpBackend(commandCLI.httpPort(), injector);
     backend.start();
+
+    BackgroundReceiptPrintingService backgroundPrinter = injector.getInstance(BackgroundReceiptPrintingService.class);
+    backgroundPrinter.startAsync().awaitRunning();
 
     System.out.printf("POS Print Service is up and running on port: %d\n", commandCLI.httpPort());
 
@@ -48,6 +53,7 @@ public class PosPrintService {
       System.out.println("POS Print Service is going to shutdown.");
       try {
         backend.stop();
+        backgroundPrinter.stopAsync();
       } catch (Exception e) {
         System.out.println("Failed to stop server due: " + e.getMessage());
       }

@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+<head>
+    <title>Admin Page</title>
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular.min.js"></script>
+
+
+    <style>
+        .ng-valid.ng-dirty {
+            border-color: green;
+        }
+
+        .ng-invalid.ng-dirty {
+            border-color: red;
+        }
+    </style>
+</head>
+<body ng-app="adminApp" ng-controller="CustomerCtrl">
+
+<div class="container" style="margin-top: 15px;" ng-init="load()">
+    <div class="row" >
+        <div class="panel panel-primary">
+            <div class="panel-heading">Receipts List</div>
+            <div class="panel-body">
+
+                <div id="messages" class="well" ng-show="message">{{ message }}</div>
+
+
+
+                <table class="table" >
+                    <tr>
+                        <th>status</th>
+                        <th>id</th>
+                        <th>amount</th>
+                        <th>fiscal</th>
+                        <th></th>
+                    </tr>
+                    <tr ng-repeat="receipt in receipts">
+                        <td>{{receipt.printStatus}}</td>
+                        <td>{{receipt.requestId}}</td>
+                        <td>{{receipt.receipt.amount}}</td>
+                        <td>{{receipt.isFiscal}}</td>
+                        <td>
+                            <button type="button" class="btn btn-xs btn-default"
+                                    ng-click="print(receipt.requestId)">
+                                <i class="glyphicon glyphicon-print"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </table>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    var formApp = angular.module('adminApp', []);
+
+    formApp.controller('CustomerCtrl', ['$scope', '$http', function ($scope, $http) {
+
+
+        $scope.receipts = {};
+        $scope.printButton = {};
+
+
+        $scope.print = function (id) {
+            $scope.printButtonEnabled = false;
+            $http.post('/v2/receipts/' + id + '/requeue', {})
+                    .then(function (response) {
+                        console.log("Response: " + response);
+
+                        $scope.message = "Receipt printed";
+                        $scope.printButtonEnabled = true;
+                        $scope.hostRule = {};
+                        $scope.load();
+                    }, function (error) {
+                        // if not successful, bind errors to error variables
+                        $scope.message = error.data;
+                        $scope.printButtonEnabled = true;
+                    });
+        };
+
+
+        $scope.load = function () {
+            $http.get('/v2/receipts/latest/10')
+                    .then(function (response) {
+                        console.log("Response: ", response);
+                        $scope.receipts = response.data;
+                    }, function (error) {
+                    });
+        };
+    }]);
+</script>
+
+</body>
+</html>

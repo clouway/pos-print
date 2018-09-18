@@ -17,6 +17,7 @@ public class HttpModule extends AbstractModule {
       protected void configureSitebricks() {
         at("/_status").serve(StatusService.class);
         at("/v1/receipts/req/print").serve(PrintService.class);
+        at("/v2/receipts").serve(PrintServiceV2.class);
         at("/v1/devices").serve(DeviceConfigurationService.class);
         at("/v1/reports").serve(ReportService.class);
       }
